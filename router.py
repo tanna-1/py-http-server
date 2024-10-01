@@ -45,5 +45,10 @@ class DebugRouter(Router):
         content += "</ul></body></html>"
 
         return HTTPResponse(
-            200, {"Content-Type": "text/html; charset=utf-8"}, content.encode("utf-8")
+            200,
+            {
+                "Content-Type": "text/html; charset=utf-8",
+                "X-Powered-By": "Tan's HTTP Server",
+            },
+            content.encode("utf-8"),
         )

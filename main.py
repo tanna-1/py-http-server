@@ -46,18 +46,17 @@ class ClientThread(threading.Thread):
 
 def main():
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((LISTEN_IP, LISTEN_PORT))
-        s.listen()
+        sock = socket.create_server((LISTEN_IP, LISTEN_PORT))
+        sock.listen()
         print(f"[*] Started server on http://{LISTEN_IP}:{LISTEN_PORT}")
-    except socket.error:
-        print("[!] Failed to create socket")
+    except socket.error as exc:
+        print(f"[!] Failed to create socket. Exception: {exc}")
         return
 
     clients = []
     while True:
         clients = [client for client in clients if not client.disposed]
-        conn, address = s.accept()
+        conn, address = sock.accept()
         parsed_address = SourceAddress(address[0], address[1])
         clients.append(ClientThread(conn, parsed_address))
         clients[-1].start()

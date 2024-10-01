@@ -76,7 +76,7 @@ class HTTPResponse:
     def body(self) -> bytes:
         return self.__body
 
-    def as_bytes(self, http_version: str) -> bytes:
+    def build(self, http_version: str) -> bytes:
         if self.__body:
             self.__headers["Content-Length"] = len(self.__body)
 

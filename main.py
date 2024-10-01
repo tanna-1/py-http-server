@@ -22,7 +22,7 @@ class ClientThread(threading.Thread):
                 req = receive_http_request(self.__conn)
                 self.__log(req)
                 resp = ROUTER.handle(self.__address, req)
-                self.__conn.send(resp.as_bytes(http_version=req.version))
+                self.__conn.send(resp.build(http_version=req.version))
 
                 # Close connection if not keep-alive
                 if req.headers.get("connection", "close") != "keep-alive":

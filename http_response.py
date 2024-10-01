@@ -76,7 +76,7 @@ class HTTPResponse:
     def body(self) -> bytes:
         return self.__body
 
-    def as_bytes(self) -> bytes:
+    def as_bytes(self, http_version: str) -> bytes:
         if self.__body:
             self.__headers["Content-Length"] = len(self.__body)
 
@@ -89,8 +89,8 @@ class HTTPResponse:
             status_code_str += f" {HTTP_STATUS_CODES[self.__status_code]}"
 
         # Headers are always ASCII encoded
-        request_header = f"HTTP/1.1 {status_code_str}\r\n{header_lines}\r\n".encode(
-            "ascii"
+        request_header = (
+            f"{http_version} {status_code_str}\r\n{header_lines}\r\n".encode("ascii")
         )
 
         if self.__body:

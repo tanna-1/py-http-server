@@ -51,7 +51,7 @@ def receive_http_request(
             key, _, val = line.partition(":")
             headers[key.lower()] = val.strip()
     except (IndexError, ValueError, UnicodeDecodeError) as exc:
-        raise ValueError(f"Response header is malformed. Inner exception: {exc}")
+        raise ValueError(f"Request header is malformed. Inner exception: {exc}")
 
     content_length = (
         int(headers["content-length"])

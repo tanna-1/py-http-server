@@ -9,4 +9,4 @@ class Router(ABC):
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse: ...
 
 
-RouteHandler = Callable[[Router, TCPAddress, HTTPRequest], HTTPResponse]
+RouteHandler = Callable[[TCPAddress, HTTPRequest], HTTPResponse]

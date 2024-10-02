@@ -26,7 +26,7 @@ class CodeRouter(Router):
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
             "Expires": "0",
-        }  # type: dict[str, str]
+        }  # type: dict[str, str|int]
 
         # Discover @route methods
         self.__handlers = {}  # type: dict[str, RouteHandler]

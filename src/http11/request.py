@@ -1,5 +1,7 @@
 import socket
 
+ALLOWED_HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]
+
 
 class HTTPRequest:
     def __init__(
@@ -13,7 +15,7 @@ class HTTPRequest:
 
     @property
     def method(self) -> str:
-        return self.__method
+        return self.__method.upper()
 
     @property
     def path(self) -> str:
@@ -21,7 +23,7 @@ class HTTPRequest:
 
     @property
     def version(self) -> str:
-        return self.__version
+        return self.__version.upper()
 
     @property
     def headers(self) -> dict[str, str]:
@@ -51,6 +53,9 @@ class HTTPRequest:
         try:
             header_lines = headers_raw.decode(encoding="ascii").split("\r\n")
             method, path, version = header_lines[0].split(" ")
+            
+            if version not in ALLOWED_HTTP_VERSIONS:
+                raise ValueError("Invalid HTTP version")
 
             headers = {}  # type: dict[str,str]
             for line in header_lines[1:]:

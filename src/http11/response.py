@@ -58,7 +58,10 @@ HTTP_STATUS_CODES = {
 
 class HTTPResponse:
     def __init__(
-        self, status_code: int, headers: dict[str, str] = {}, body: str | bytes = b""
+        self,
+        status_code: int,
+        headers: dict[str, str | int] = {},
+        body: str | bytes = b"",
     ):
         self.__status_code = status_code
         self.__headers = headers
@@ -69,7 +72,7 @@ class HTTPResponse:
         return self.__status_code
 
     @property
-    def headers(self) -> dict[str, str]:
+    def headers(self) -> dict[str, str | int]:
         return self.__headers
 
     @property
@@ -77,8 +80,7 @@ class HTTPResponse:
         return self.__body
 
     def build(self, http_version: str) -> bytes:
-        if self.__body:
-            self.__headers["Content-Length"] = len(self.__body)
+        self.__headers["Content-Length"] = len(self.__body)
 
         header_lines = "".join(
             f"{header}: {value}\r\n" for header, value in self.__headers.items()
@@ -93,6 +95,6 @@ class HTTPResponse:
             f"{http_version} {status_code_str}\r\n{header_lines}\r\n".encode("ascii")
         )
 
-        if self.__body:
+        if len(self.__body) > 0:
             return request_header + self.__body
         return request_header

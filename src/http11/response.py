@@ -1,3 +1,5 @@
+import socket
+
 HTTP_STATUS_CODES = {
     100: "Continue",
     101: "Switching Protocols",
@@ -79,7 +81,7 @@ class HTTPResponse:
     def body(self) -> bytes:
         return self.__body
 
-    def build(self, http_version: str) -> bytes:
+    def send_to(self, conn: socket.socket, http_version: str):
         self.__headers["Content-Length"] = len(self.__body)
 
         header_lines = "".join(
@@ -91,10 +93,12 @@ class HTTPResponse:
             status_code_str += f" {HTTP_STATUS_CODES[self.__status_code]}"
 
         # Headers are always ASCII encoded
-        request_header = (
+        response_header = (
             f"{http_version} {status_code_str}\r\n{header_lines}\r\n".encode("ascii")
         )
 
+        # Send the HTTP header
+        conn.send(response_header)
+
         if len(self.__body) > 0:
-            return request_header + self.__body
-        return request_header
+            conn.send(self.__body)

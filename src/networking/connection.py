@@ -26,11 +26,9 @@ class ConnectionThread(threading.Thread):
                 req = HTTPRequest.receive_from(self.__conn)
                 LOG.info(f"({self.__requester}) {req}")
 
-                # Pass the request to router
+                # Pass the request to router, send the response
                 resp = self.__router._raw_handle_request(self.__requester, req)
-
-                # Send the response from router
-                self.__conn.send(resp.build(http_version=req.version))
+                resp.send_to(self.__conn, req.version)
 
                 # Close connection if not keep-alive
                 if req.headers.get("connection", "close") != "keep-alive":

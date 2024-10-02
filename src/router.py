@@ -4,6 +4,9 @@ from networking.address import TCPAddress
 from abc import ABC
 from typing import Callable
 import json
+import logging
+
+LOG = logging.getLogger("router")
 
 
 class Router(ABC):
@@ -36,21 +39,23 @@ class DefaultRouter(Router):
         for member in dir(self):
             value = getattr(self, member)
             if callable(value) and "_route" in dir(value):
-                self.__handlers[value._route["path"]] = value
-
-    def __log(self, message: str):
-        print(f"[DefaultRouter] {message}")
+                path = value._route["path"]
+                LOG.debug(f'Discovered handler {value.__qualname__} for "{path}"')
+                self.__handlers[path] = value
 
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         # Parse the path to separate query parameters
         path, _, query = request.path.partition("?")
 
         if path in self.__handlers:
+            # A handler was found.
+
+            handler = self.__handlers[path]
             try:
-                # A handler was found.
-                resp = self.__handlers[path](requester, request)  # type: HTTPResponse
+                LOG.debug(f'Calling handler {handler.__qualname__} for path "{path}"')
+                resp = handler(requester, request)  # type: HTTPResponse
             except Exception as exc:
-                self.__log(f'Exception in handler for "{path}" Exception: {exc}')
+                LOG.exception(f'Exception in handler for path "{path}"', exc_info=exc)
                 return self.internal_error_page(requester, request)
 
             # Set header values to default if unset
@@ -106,3 +111,7 @@ class DebugRouter(DefaultRouter):
         content += "</ul></body></html>"
 
         return HTTPResponse(200, body=content.encode("utf-8"))
+    
+    @route("/error")
+    def error_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
+        raise RuntimeError("DebugRouter test exception")

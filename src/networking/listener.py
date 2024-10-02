@@ -4,6 +4,9 @@ from router import Router
 import socket
 import threading
 import ssl
+import logging
+
+LOG = logging.getLogger("listener")
 
 
 class ListenerThread(threading.Thread):
@@ -33,11 +36,15 @@ class ListenerThread(threading.Thread):
 
                 # Add new connection
                 self.__add_connection(conn, parsed_address)
-                self.__log(f"Client connected from {parsed_address}")
+                LOG.debug(
+                    f"({self.__bind_address}) Client connected from {parsed_address}"
+                )
         except Exception as exc:
             # Suppress error messages on dispose() call
             if not self.__disposed:
-                self.__log(f"{exc}")
+                LOG.exception(
+                    f"({self.__bind_address}) Error in ListenerThread", exc_info=exc
+                )
 
         self.dispose()
 
@@ -47,9 +54,6 @@ class ListenerThread(threading.Thread):
 
     def __clean_old_connections(self):
         self.__connections = [c for c in self.__connections if not c.disposed]
-
-    def __log(self, message: str):
-        print(f"[listener] {self.__bind_address} {message}")
 
     @property
     def disposed(self):
@@ -61,7 +65,7 @@ class ListenerThread(threading.Thread):
             for connection in self.__connections:
                 connection.dispose()
             self.__socket.close()
-            self.__log("Closed listener.")
+            LOG.info(f"({self.__bind_address}) Closed listener.")
 
     @staticmethod
     def create(bind_address: TCPAddress, router: Router):

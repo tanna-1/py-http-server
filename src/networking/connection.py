@@ -3,6 +3,9 @@ from http11.request import HTTPRequest
 from router import Router
 import socket
 import threading
+import logging
+
+LOG = logging.getLogger("connection")
 
 
 class ConnectionThread(threading.Thread):
@@ -21,7 +24,7 @@ class ConnectionThread(threading.Thread):
             while True:
                 # Read request from socket
                 req = HTTPRequest.receive_from(self.__conn)
-                self.__log(req)
+                LOG.info(f"({self.__requester}) {req}")
 
                 # Pass the request to router
                 resp = self.__router.handle(self.__requester, req)
@@ -35,12 +38,11 @@ class ConnectionThread(threading.Thread):
         except Exception as exc:
             # Suppress error messages on dispose() call
             if not self.__disposed:
-                self.__log(f"{exc}")
-        
-        self.dispose()
+                LOG.exception(
+                    f"({self.__requester}) Error in ConnectionThread", exc_info=exc
+                )
 
-    def __log(self, message: str):
-        print(f"[connection] {self.__requester} {message}")
+        self.dispose()
 
     @property
     def disposed(self):
@@ -50,4 +52,4 @@ class ConnectionThread(threading.Thread):
         if not self.__disposed:
             self.__disposed = True
             self.__conn.close()
-            self.__log("Closed connection.")
+            LOG.debug(f"({self.__requester}) Closed connection.")

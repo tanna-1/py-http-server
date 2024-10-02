@@ -1,0 +1,21 @@
+{
+    "$schema": "./config.json.schema",
+    "listeners": [
+        {
+            "address": "127.0.0.1:80"
+        },
+        {
+            "address": "[::1]:80"
+        },
+        {
+            "address": "127.0.0.1:443",
+            "keyfile": "/etc/pyhttpserver/key.pem",
+            "certfile": "/etc/pyhttpserver/cert.pem"
+        },
+        {
+            "address": "[::1]:443",
+            "keyfile": "/etc/pyhttpserver/key.pem",
+            "certfile": "/etc/pyhttpserver/cert.pem"
+        }
+    ]
+}

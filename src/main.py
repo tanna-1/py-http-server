@@ -3,6 +3,7 @@ from networking.address import TCPAddress
 from router import DebugRouter
 import time
 import logging
+import logs
 
 LOG = logging.getLogger("main")
 
@@ -57,11 +58,11 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logs.init()
     try:
         main()
     except KeyboardInterrupt:
         pass
     except Exception as exc:
         LOG.fatal("Unrecoverable error", exc_info=exc)
-    logging.shutdown()
+    logs.shutdown()

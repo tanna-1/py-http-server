@@ -8,6 +8,7 @@ import mimetypes
 import urllib.parse
 import os
 import logging
+import hashlib
 
 
 LOG = logging.getLogger("routers.file")
@@ -16,28 +17,23 @@ CHUNK_THRESHOLD = 1048576  # 1MiB
 
 class FileRouter(Router):
     def __init__(
-        self, document_root: str | os.PathLike, generate_index: bool = True
+        self,
+        document_root: str | os.PathLike,
+        generate_index: bool = True,
+        generate_etag: bool = True,
     ) -> None:
         super().__init__()
 
-        self.__html_headers = {
-            "Content-Type": "text/html; charset=utf-8",
+        self.__headers = {
             "X-Powered-By": "Tan's HTTP Server",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Cache-Control": "no-cache, must-revalidate",
             "Pragma": "no-cache",
             "Expires": "0",
-        }  # type: dict[str, str]
-
-        self.__file_headers = {
-            "Content-Type": "application/octet-stream",
-            "X-Powered-By": "Tan's HTTP Server",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-        }  # type: dict[str, str]
+        }  # type: dict[str, str|int]
 
         self.__document_root = Path(document_root).resolve()
         self.__generate_index = generate_index
+        self.__generate_etag = generate_etag
 
     def __is_path_allowed(self, path: Path):
         return path.is_relative_to(self.__document_root)
@@ -53,30 +49,28 @@ class FileRouter(Router):
 
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         if request.method != "GET":
-            return self.not_found_page(requester, request)
+            return self.not_found_page()
 
         full_path = self.__document_root.joinpath(request.path.lstrip("/")).resolve()
 
         # Prevent path traversal!
         if not self.__is_path_allowed(full_path):
             LOG.warning(f"Attempted path traversal! Returning 404.")
-            return self.not_found_page(requester, request)
+            return self.not_found_page()
 
         if full_path.is_file():
-            return self.serve_file(requester, request, full_path)
+            return self.serve_file(request, full_path)
         elif full_path.is_dir():
             index_html = full_path.joinpath("index.html")
             if index_html.is_file():
-                return self.serve_file(requester, request, index_html)
+                return self.serve_file(request, index_html)
             elif self.__generate_index:
                 # Generate index if allowe and there is no index.html
-                return self.serve_folder(requester, request, full_path)
+                return self.serve_folder(full_path)
 
-        return self.not_found_page(requester, request)
+        return self.not_found_page()
 
-    def serve_file(
-        self, requester: TCPAddress, request: HTTPRequest, path: Path
-    ) -> HTTPResponse:
+    def serve_file(self, request: HTTPRequest, path: Path) -> HTTPResponse:
         try:
             with path.open("rb") as f:
                 LOG.info(f'Reading file "{path}"')
@@ -86,18 +80,25 @@ class FileRouter(Router):
 
                 if size > CHUNK_THRESHOLD:
                     # Not implemented yet.
-                    return self.internal_error_page(requester, request)
+                    return self.internal_error_page()
 
-                headers = dict(self.__file_headers)
+                headers = dict(self.__headers)
+                if self.__generate_etag:
+                    etag = f'"{hashlib.file_digest(f, "sha256").hexdigest()}"'
+                    headers["ETag"] = etag
+                    f.seek(0, os.SEEK_SET)
+
+                    # Return 304 if ETag matches
+                    if etag == request.headers.get("if-none-match", None):
+                        return HTTPResponse(304, self.__headers | {"ETag": etag})
+
                 headers["Content-Type"] = self.__get_content_type(path)
                 return HTTPResponse(200, headers, f.read(size))
         except Exception as exc:
             LOG.exception("Error while reading file.", exc_info=exc)
-            return self.internal_error_page(requester, request)
+            return self.internal_error_page()
 
-    def serve_folder(
-        self, requester: TCPAddress, request: HTTPRequest, path: Path
-    ) -> HTTPResponse:
+    def serve_folder(self, path: Path) -> HTTPResponse:
         # Turns any path into an absolute web path (relative to document root)
         def make_link(p: Path) -> str:
             rel_p = p.relative_to(self.__document_root)
@@ -116,14 +117,22 @@ class FileRouter(Router):
         content += (
             f"</ul><p>Generated on {datetime.now().isoformat()}</p></body></html>"
         )
-        return HTTPResponse(200, self.__html_headers, content.encode("utf-8"))
+        return HTTPResponse(
+            200,
+            self.__headers | {"Content-Type": "text/html; charset=utf-8"},
+            content.encode("utf-8"),
+        )
 
-    def internal_error_page(
-        self, requester: TCPAddress, request: HTTPRequest
-    ) -> HTTPResponse:
-        return HTTPResponse(500, self.__html_headers, b"500 Internal Server Error")
+    def internal_error_page(self) -> HTTPResponse:
+        return HTTPResponse(
+            500,
+            self.__headers | {"Content-Type": "text/plain; charset=ascii"},
+            b"500 Internal Server Error",
+        )
 
-    def not_found_page(
-        self, requester: TCPAddress, request: HTTPRequest
-    ) -> HTTPResponse:
-        return HTTPResponse(404, self.__html_headers, b"404 Not Found")
+    def not_found_page(self) -> HTTPResponse:
+        return HTTPResponse(
+            404,
+            self.__headers | {"Content-Type": "text/plain; charset=ascii"},
+            b"404 Not Found",
+        )

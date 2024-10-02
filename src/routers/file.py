@@ -49,14 +49,14 @@ class FileRouter(Router):
 
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         if request.method != "GET":
-            return self.not_found_page()
+            return self.status_response(400, self.__headers)
 
         full_path = self.__document_root.joinpath(request.path.lstrip("/")).resolve()
 
         # Prevent path traversal!
         if not self.__is_path_allowed(full_path):
-            LOG.warning(f"Attempted path traversal! Returning 404.")
-            return self.not_found_page()
+            LOG.warning(f"Attempted path traversal! Returning 400.")
+            return self.status_response(400, self.__headers)
 
         if full_path.is_file():
             return self.serve_file(request, full_path)
@@ -68,7 +68,7 @@ class FileRouter(Router):
                 # Generate index if allowe and there is no index.html
                 return self.serve_folder(full_path)
 
-        return self.not_found_page()
+        return self.status_response(404, self.__headers)
 
     def serve_file(self, request: HTTPRequest, path: Path) -> HTTPResponse:
         try:
@@ -80,7 +80,7 @@ class FileRouter(Router):
 
                 if size > CHUNK_THRESHOLD:
                     # Not implemented yet.
-                    return self.internal_error_page()
+                    return self.status_response(500, self.__headers)
 
                 headers = dict(self.__headers)
                 if self.__generate_etag:
@@ -90,13 +90,15 @@ class FileRouter(Router):
 
                     # Return 304 if ETag matches
                     if etag == request.headers.get("if-none-match", None):
-                        return HTTPResponse(304, self.__headers | {"ETag": etag})
+                        return self.status_response(
+                            304, self.__headers | {"ETag": etag}
+                        )
 
                 headers["Content-Type"] = self.__get_content_type(path)
                 return HTTPResponse(200, headers, f.read(size))
         except Exception as exc:
             LOG.exception("Error while reading file.", exc_info=exc)
-            return self.internal_error_page()
+            return self.status_response(500, self.__headers)
 
     def serve_folder(self, path: Path) -> HTTPResponse:
         # Turns any path into an absolute web path (relative to document root)
@@ -121,18 +123,4 @@ class FileRouter(Router):
             200,
             self.__headers | {"Content-Type": "text/html; charset=utf-8"},
             content.encode("utf-8"),
-        )
-
-    def internal_error_page(self) -> HTTPResponse:
-        return HTTPResponse(
-            500,
-            self.__headers | {"Content-Type": "text/plain; charset=ascii"},
-            b"500 Internal Server Error",
-        )
-
-    def not_found_page(self) -> HTTPResponse:
-        return HTTPResponse(
-            404,
-            self.__headers | {"Content-Type": "text/plain; charset=ascii"},
-            b"404 Not Found",
         )

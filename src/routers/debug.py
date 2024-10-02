@@ -38,7 +38,11 @@ class DebugRouter(CodeRouter):
             content += f"<li>{key}: {value}</li>"
         content += "</ul></body></html>"
 
-        return HTTPResponse(200, body=content.encode("utf-8"))
+        return HTTPResponse(
+            200,
+            {"Content-Type": "text/html; charset=utf-8"},
+            content.encode("utf-8"),
+        )
 
     @route("/error")
     def error_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:

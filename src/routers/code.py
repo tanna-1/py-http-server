@@ -20,8 +20,7 @@ class CodeRouter(Router):
         super().__init__()
 
         # Define default headers
-        self.default_headers = {
-            "Content-Type": "text/html; charset=utf-8",
+        self.__headers = {
             "X-Powered-By": "Tan's HTTP Server",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
@@ -51,24 +50,14 @@ class CodeRouter(Router):
                 LOG.exception(
                     f'Exception in handler for path "{request.path}"', exc_info=exc
                 )
-                return self.internal_error_page(requester, request)
+                return self.status_response(500, self.__headers)
 
             # Set header values to default if unset
-            new_headers = resp.headers
-            for key, value in self.default_headers.items():
+            new_headers = dict(resp.headers)
+            for key, value in self.__headers.items():
                 if key not in new_headers:
                     new_headers[key] = value
 
             # HTTPResponse is immutable
             return HTTPResponse(resp.status_code, new_headers, resp.body)
-        return self.not_found_page(requester, request)
-
-    def internal_error_page(
-        self, requester: TCPAddress, request: HTTPRequest
-    ) -> HTTPResponse:
-        return HTTPResponse(500, self.default_headers, b"500 Internal Server Error")
-
-    def not_found_page(
-        self, requester: TCPAddress, request: HTTPRequest
-    ) -> HTTPResponse:
-        return HTTPResponse(404, self.default_headers, b"404 Not Found")
+        return self.status_response(404, self.__headers)

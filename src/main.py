@@ -1,6 +1,6 @@
 from networking.listener import ListenerThread
 from networking.address import TCPAddress
-from router import DebugRouter
+from routers.debug import DebugRouter
 import time
 import logging
 import logs

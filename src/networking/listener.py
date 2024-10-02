@@ -1,6 +1,6 @@
 from networking.address import TCPAddress
 from networking.connection import ConnectionThread
-from router import Router
+from routers.base import Router
 import socket
 import threading
 import ssl

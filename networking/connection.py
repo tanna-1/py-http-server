@@ -6,10 +6,10 @@ import threading
 
 
 class ConnectionThread(threading.Thread):
-    def __init__(self, conn: socket.socket, address: TCPAddress, router: Router):
+    def __init__(self, conn: socket.socket, requester: TCPAddress, router: Router):
         super().__init__()
         self.__conn = conn
-        self.__address = address
+        self.__requester = requester
         self.__router = router
         self.__disposed = False
 
@@ -24,7 +24,7 @@ class ConnectionThread(threading.Thread):
                 self.__log(req)
 
                 # Pass the request to router
-                resp = self.__router.handle(self.__address, req)
+                resp = self.__router.handle(self.__requester, req)
 
                 # Send the response from router
                 self.__conn.send(resp.build(http_version=req.version))
@@ -40,7 +40,7 @@ class ConnectionThread(threading.Thread):
         self.dispose()
 
     def __log(self, message: str):
-        print(f"[connection] {self.__address} {message}")
+        print(f"[connection] {self.__requester} {message}")
 
     @property
     def disposed(self):

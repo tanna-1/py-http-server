@@ -5,12 +5,14 @@ from abc import ABC
 
 
 class Router(ABC):
-    def handle(self, address: TCPAddress, request: HTTPRequest) -> HTTPResponse: ...
+    def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse: ...
 
 
 class DebugRouter(Router):
-    def handle(self, address: TCPAddress, request: HTTPRequest) -> HTTPResponse:
-        content = f"<!DOCTYPE html><html><body><h3>Source Address</h3><p>{address}</p>"
+    def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
+        content = (
+            f"<!DOCTYPE html><html><body><h3>Source Address</h3><p>{requester}</p>"
+        )
         content += f"<h3>Request URL</h3><p>{request.url}</p>"
         content += f"<h3>Request Method</h3><p>{request.method}</p>"
         content += "<h3>Request Headers</h3><ul>"

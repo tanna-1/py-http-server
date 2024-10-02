@@ -44,7 +44,7 @@ class DefaultRouter(Router):
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         # Parse the path to separate query parameters
         path, _, query = request.path.partition("?")
-        
+
         if path in self.__handlers:
             try:
                 # A handler was found.

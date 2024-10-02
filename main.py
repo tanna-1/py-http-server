@@ -1,66 +1,33 @@
-import socket
-import threading
+from networking.listener import ListenerThread
+from networking.address import TCPAddress
+from router import DebugRouter
+import time
 
-from http_request import receive_http_request
-from router import DebugRouter, SourceAddress
-
-LISTEN_IP = "127.0.0.1"
-LISTEN_PORT = 80
+LISTEN_ADDR = [
+    TCPAddress("127.0.0.1", 80),
+    TCPAddress("::1", 80),
+]  # type: list[TCPAddress]
 ROUTER = DebugRouter()
 
 
-class ClientThread(threading.Thread):
-    def __init__(self, conn: socket.socket, address: SourceAddress):
-        super().__init__()
-        self.__conn = conn
-        self.__address = address
-        self.__disposed = False
-
-    def run(self):
-        try:
-            while True:
-                req = receive_http_request(self.__conn)
-                self.__log(req)
-                resp = ROUTER.handle(self.__address, req)
-                self.__conn.send(resp.build(http_version=req.version))
-
-                # Close connection if not keep-alive
-                if req.headers.get("connection", "close") != "keep-alive":
-                    break
-        except Exception as exc:
-            self.__log(f"Exception: {exc}")
-        self.dispose()
-
-    def __log(self, message: str):
-        print(f"[{self.__address}] {message}")
-
-    @property
-    def disposed(self):
-        return self.__disposed
-
-    def dispose(self):
-        self.__conn.close()
-        self.__disposed = True
-        self.__log("Closed connection.")
-
-
 def main():
-    try:
-        sock = socket.create_server((LISTEN_IP, LISTEN_PORT))
-        sock.listen()
-        print(f"[*] Started server on http://{LISTEN_IP}:{LISTEN_PORT}")
-    except socket.error as exc:
-        print(f"[!] Failed to create socket. Exception: {exc}")
-        return
+    listeners = []  # type: list[ListenerThread]
+    for address in LISTEN_ADDR:
+        try:
+            listeners.append(ListenerThread.create(address, ROUTER))
+            print(f"[+] New listener on {address}")
+        except Exception as exc:
+            print(f"[*] Failed to create a listener on {address}. {exc}")
 
-    clients = []
-    while True:
-        clients = [client for client in clients if not client.disposed]
-        conn, address = sock.accept()
-        parsed_address = SourceAddress(address[0], address[1])
-        clients.append(ClientThread(conn, parsed_address))
-        clients[-1].start()
-        print(f"[+] Client connected from {parsed_address}")
+    try:
+        while len(listeners) > 0:
+            # Clean disposed listeners
+            listeners = [l for l in listeners if not l.disposed]
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+
+    print("[*] Exiting...")
 
 
 if __name__ == "__main__":

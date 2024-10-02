@@ -23,6 +23,9 @@ class CodeRouter(Router):
         self.default_headers = {
             "Content-Type": "text/html; charset=utf-8",
             "X-Powered-By": "Tan's HTTP Server",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
         }  # type: dict[str, str]
 
         # Discover @route methods

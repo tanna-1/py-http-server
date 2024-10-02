@@ -42,16 +42,15 @@ class DefaultRouter(Router):
         print(f"[DefaultRouter] {message}")
 
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
-        if request.path in self.__handlers:
+        # Parse the path to separate query parameters
+        path, _, query = request.path.partition("?")
+        
+        if path in self.__handlers:
             try:
                 # A handler was found.
-                resp = self.__handlers[request.path](
-                    requester, request
-                )  # type: HTTPResponse
+                resp = self.__handlers[path](requester, request)  # type: HTTPResponse
             except Exception as exc:
-                self.__log(
-                    f'Exception in handler for "{request.path}" Exception: {exc}'
-                )
+                self.__log(f'Exception in handler for "{path}" Exception: {exc}')
                 return self.internal_error_page(requester, request)
 
             # Set header values to default if unset

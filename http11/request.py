@@ -3,10 +3,10 @@ import socket
 
 class HTTPRequest:
     def __init__(
-        self, method: str, url: str, headers: dict[str, str], version: str, body: bytes
+        self, method: str, path: str, headers: dict[str, str], version: str, body: bytes
     ):
         self.__method = method
-        self.__url = url
+        self.__path = path
         self.__version = version
         self.__headers = headers
         self.__body = body
@@ -16,8 +16,8 @@ class HTTPRequest:
         return self.__method
 
     @property
-    def url(self) -> str:
-        return self.__url
+    def path(self) -> str:
+        return self.__path
 
     @property
     def version(self) -> str:
@@ -32,7 +32,7 @@ class HTTPRequest:
         return self.__body
 
     def __str__(self) -> str:
-        return f"{self.__method} {self.__url} {self.__version}"
+        return f"{self.__method} {self.__path} {self.__version}"
 
     @staticmethod
     def receive_from(
@@ -50,7 +50,7 @@ class HTTPRequest:
 
         try:
             header_lines = headers_raw.decode(encoding="ascii").split("\r\n")
-            method, url, version = header_lines[0].split(" ")
+            method, path, version = header_lines[0].split(" ")
 
             headers = {}  # type: dict[str,str]
             for line in header_lines[1:]:
@@ -71,4 +71,4 @@ class HTTPRequest:
             while len(body) < content_length:
                 body += conn.recv(min(recv_buffer_size, content_length - len(body)))
 
-        return HTTPRequest(method, url, headers, version, body)
+        return HTTPRequest(method, path, headers, version, body)

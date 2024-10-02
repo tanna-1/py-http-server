@@ -11,8 +11,8 @@ class Router(ABC):
 
 class DebugRouter(Router):
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
-        if request.url in self.HANDLERS:
-            return self.HANDLERS[request.url](self, requester, request)
+        if request.path in self.HANDLERS:
+            return self.HANDLERS[request.path](self, requester, request)
 
         return HTTPResponse(
             404,
@@ -28,7 +28,7 @@ class DebugRouter(Router):
             "requester": str(requester),
             "request": {
                 "headers": request.headers,
-                "url": request.url,
+                "path": request.path,
                 "method": request.method,
                 "version": request.version,
                 "body_ascii": request.body.decode("ascii", "ignore"),
@@ -45,10 +45,9 @@ class DebugRouter(Router):
         )
 
     def root_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
-        content = (
-            f"<!DOCTYPE html><html><body><h3>Source Address</h3><p>{requester}</p>"
-        )
-        content += f"<h3>Request URL</h3><p>{request.url}</p>"
+        content = f'<!DOCTYPE html><html><body><a href="/json">Try the /json page</a>'
+        content += f"<h3>Source Address</h3><p>{requester}</p>"
+        content += f"<h3>Request URL</h3><p>{request.path}</p>"
         content += f"<h3>Request Method</h3><p>{request.method}</p>"
         content += "<h3>Request Headers</h3><ul>"
         for key, value in request.headers.items():

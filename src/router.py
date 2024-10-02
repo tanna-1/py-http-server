@@ -24,7 +24,7 @@ def route(path):
     return _route_decorator
 
 
-class DefaultRouter(Router):
+class CodeRouter(Router):
     def __init__(self) -> None:
         super().__init__()
 
@@ -80,7 +80,7 @@ class DefaultRouter(Router):
         return HTTPResponse(404, self.default_headers, b"404 Not Found")
 
 
-class DebugRouter(DefaultRouter):
+class DebugRouter(CodeRouter):
     @route("/json")
     def json_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         content = {

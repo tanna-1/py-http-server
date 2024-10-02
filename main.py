@@ -3,10 +3,15 @@ from networking.address import TCPAddress
 from router import DebugRouter
 import time
 
-LISTEN_ADDR = [
+HTTP_BIND_ADDRESSES = [
     TCPAddress("127.0.0.1", 80),
     TCPAddress("::1", 80),
 ]  # type: list[TCPAddress]
+
+HTTPS_BIND_ADDRESSES = []  # type: list[TCPAddress]
+HTTPS_KEY_FILE = ""
+HTTPS_CERT_FILE = ""
+
 ROUTER = DebugRouter()
 
 
@@ -16,12 +21,26 @@ def log(message: str):
 
 def main():
     listeners = []  # type: list[ListenerThread]
-    for address in LISTEN_ADDR:
+
+    # Create HTTP listeners
+    for address in HTTP_BIND_ADDRESSES:
         try:
             listeners.append(ListenerThread.create(address, ROUTER))
-            log(f"New listener on {address}")
+            log(f"New HTTP listener on {address}")
         except Exception as exc:
-            log(f"Failed to create a listener on {address}. {exc}")
+            log(f"Failed to create a HTTP listener on {address}. {exc}")
+
+    # Create HTTPS listeners
+    for address in HTTPS_BIND_ADDRESSES:
+        try:
+            listeners.append(
+                ListenerThread.create_ssl(
+                    address, ROUTER, HTTPS_KEY_FILE, HTTPS_CERT_FILE
+                )
+            )
+            log(f"New HTTPS listener on {address}")
+        except Exception as exc:
+            log(f"Failed to create a HTTPS listener on {address}. {exc}")
 
     try:
         while len(listeners) > 0:

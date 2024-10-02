@@ -3,6 +3,7 @@ from networking.connection import ConnectionThread
 from router import Router
 import socket
 import threading
+import ssl
 
 
 class ListenerThread(threading.Thread):
@@ -72,7 +73,31 @@ class ListenerThread(threading.Thread):
             socket.AF_INET if bind_address.ip_version == 4 else socket.AF_INET6
         )
         sock = socket.create_server(
-            (bind_address.ip, bind_address.port), family=sock_family
+            (bind_address.ip, bind_address.port),
+            family=sock_family,
+        )
+        sock.listen()
+
+        thread = ListenerThread(sock, bind_address, router)
+        thread.start()
+        return thread
+
+    @staticmethod
+    def create_ssl(bind_address: TCPAddress, router: Router, keyfile, certfile):
+        """
+        Will throw if the address can't be bound to.
+        This method exists to avoid having a constructor that can throw.
+        """
+        sock_family = (
+            socket.AF_INET if bind_address.ip_version == 4 else socket.AF_INET6
+        )
+        sock = socket.create_server(
+            (bind_address.ip, bind_address.port),
+            family=sock_family,
+        )
+
+        sock = ssl.wrap_socket(
+            sock, keyfile=keyfile, certfile=certfile, server_side=True
         )
         sock.listen()
 

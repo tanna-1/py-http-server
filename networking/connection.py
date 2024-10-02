@@ -33,11 +33,14 @@ class ConnectionThread(threading.Thread):
                 if req.headers.get("connection", "close") != "keep-alive":
                     break
         except Exception as exc:
-            self.__log(f"{exc}")
+            # Suppress error messages on dispose() call
+            if not self.__disposed:
+                self.__log(f"{exc}")
+        
         self.dispose()
 
     def __log(self, message: str):
-        print(f"[{self.__address}] {message}")
+        print(f"[connection] {self.__address} {message}")
 
     @property
     def disposed(self):
@@ -45,6 +48,6 @@ class ConnectionThread(threading.Thread):
 
     def dispose(self):
         if not self.__disposed:
-            self.__conn.close()
             self.__disposed = True
+            self.__conn.close()
             self.__log("Closed connection.")

@@ -10,14 +10,18 @@ LISTEN_ADDR = [
 ROUTER = DebugRouter()
 
 
+def log(message: str):
+    print(f"[main] {message}")
+
+
 def main():
     listeners = []  # type: list[ListenerThread]
     for address in LISTEN_ADDR:
         try:
             listeners.append(ListenerThread.create(address, ROUTER))
-            print(f"[+] New listener on {address}")
+            log(f"New listener on {address}")
         except Exception as exc:
-            print(f"[*] Failed to create a listener on {address}. {exc}")
+            log(f"Failed to create a listener on {address}. {exc}")
 
     try:
         while len(listeners) > 0:
@@ -27,7 +31,9 @@ def main():
     except KeyboardInterrupt:
         pass
 
-    print("[*] Exiting...")
+    log("Exiting...")
+    for listener in listeners:
+        listener.dispose()
 
 
 if __name__ == "__main__":

@@ -6,14 +6,15 @@ import threading
 
 
 class ListenerThread(threading.Thread):
-    def __init__(self, socket: socket.socket, router: Router):
+    def __init__(self, socket: socket.socket, bind_address: TCPAddress, router: Router):
         """
         Socket must already be in listening state.
         """
         super().__init__()
-        self.__socket = socket
         self.__disposed = False
         self.__connections = []  # type: list[ConnectionThread]
+        self.__socket = socket
+        self.__bind_address = bind_address
         self.__router = router
 
     def run(self):
@@ -22,7 +23,7 @@ class ListenerThread(threading.Thread):
 
         try:
             while True:
-                # Remove disposed connections
+                # Clean disposed connections
                 self.__clean_old_connections()
 
                 # Wait for a connection
@@ -31,9 +32,12 @@ class ListenerThread(threading.Thread):
 
                 # Add new connection
                 self.__add_connection(conn, parsed_address)
-                print(f"[+] Client connected from {parsed_address}")
+                self.__log(f"Client connected from {parsed_address}")
         except Exception as exc:
-            self.__log(f"{exc}")
+            # Suppress error messages on dispose() call
+            if not self.__disposed:
+                self.__log(f"{exc}")
+
         self.dispose()
 
     def __add_connection(self, conn: socket.socket, parsed_address: TCPAddress):
@@ -44,7 +48,7 @@ class ListenerThread(threading.Thread):
         self.__connections = [c for c in self.__connections if not c.disposed]
 
     def __log(self, message: str):
-        print(f"[listener] {message}")
+        print(f"[listener] {self.__bind_address} {message}")
 
     @property
     def disposed(self):
@@ -52,10 +56,10 @@ class ListenerThread(threading.Thread):
 
     def dispose(self):
         if not self.__disposed:
+            self.__disposed = True
             for connection in self.__connections:
                 connection.dispose()
             self.__socket.close()
-            self.__disposed = True
             self.__log("Closed listener.")
 
     @staticmethod
@@ -72,6 +76,6 @@ class ListenerThread(threading.Thread):
         )
         sock.listen()
 
-        thread = ListenerThread(sock, router)
+        thread = ListenerThread(sock, bind_address, router)
         thread.start()
         return thread

@@ -27,7 +27,7 @@ class ConnectionThread(threading.Thread):
                 LOG.info(f"({self.__requester}) {req}")
 
                 # Pass the request to router
-                resp = self.__router.handle(self.__requester, req)
+                resp = self.__router._raw_handle_request(self.__requester, req)
 
                 # Send the response from router
                 self.__conn.send(resp.build(http_version=req.version))

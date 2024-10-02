@@ -1,5 +1,4 @@
 from http11.request import HTTPRequest
-from http11.response import HTTPResponse
 from networking.address import TCPAddress
 from routers.base import Router, RouteHandler
 import logging
@@ -17,15 +16,14 @@ def route(path):
 
 class CodeRouter(Router):
     def __init__(self) -> None:
-        super().__init__()
-
-        # Define default headers
-        self.__headers = {
-            "X-Powered-By": "Tan's HTTP Server",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-        }  # type: dict[str, str|int]
+        super().__init__(
+            {
+                "X-Powered-By": "Tan's HTTP Server",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            }
+        )
 
         # Discover @route methods
         self.__handlers = {}  # type: dict[str, RouteHandler]
@@ -36,28 +34,18 @@ class CodeRouter(Router):
                 LOG.debug(f'Discovered handler "{value.__qualname__}" for "{path}"')
                 self.__handlers[path] = value
 
-    def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
-        if request.path in self.__handlers:
-            # A handler was found.
+    def handle_request(self, requester: TCPAddress, request: HTTPRequest):
+        if not request.path in self.__handlers:
+            return 404
 
-            handler = self.__handlers[request.path]
-            try:
-                LOG.debug(
-                    f'Calling handler "{handler.__qualname__}" for path "{request.path}"'
-                )
-                resp = handler(requester, request)  # type: HTTPResponse
-            except Exception as exc:
-                LOG.exception(
-                    f'Exception in handler for path "{request.path}"', exc_info=exc
-                )
-                return self.status_response(500, self.__headers)
-
-            # Set header values to default if unset
-            new_headers = dict(resp.headers)
-            for key, value in self.__headers.items():
-                if key not in new_headers:
-                    new_headers[key] = value
-
-            # HTTPResponse is immutable
-            return HTTPResponse(resp.status_code, new_headers, resp.body)
-        return self.status_response(404, self.__headers)
+        handler = self.__handlers[request.path]
+        try:
+            LOG.debug(
+                f'Calling handler "{handler.__qualname__}" for path "{request.path}"'
+            )
+            return handler(requester, request)
+        except Exception as exc:
+            LOG.exception(
+                f'Exception in handler for path "{request.path}"', exc_info=exc
+            )
+            return 500

@@ -1,33 +1,27 @@
 from http11.request import HTTPRequest
-from http11.response import HTTPResponse
 from networking.address import TCPAddress
 from routers.code import CodeRouter, route
-import json
 
 
 class DebugRouter(CodeRouter):
     @route("/json")
-    def json_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
-        content = {
-            "requester": str(requester),
-            "request": {
-                "headers": request.headers,
-                "path": request.path,
-                "query": request.query,
-                "method": request.method,
-                "version": request.version,
-                "body": request.body.decode("ascii", "ignore"),
-            },
-        }
-
-        return HTTPResponse(
-            200,
-            {"Content-Type": "application/json; charset=utf-8"},
-            json.dumps(content).encode("utf-8"),
+    def json_page(self, requester: TCPAddress, request: HTTPRequest):
+        return self.json(
+            {
+                "requester": str(requester),
+                "request": {
+                    "headers": request.headers,
+                    "path": request.path,
+                    "query": request.query,
+                    "method": request.method,
+                    "version": request.version,
+                    "body": request.body.decode("ascii", "ignore"),
+                },
+            }
         )
 
     @route("/")
-    def root_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
+    def root_page(self, requester: TCPAddress, request: HTTPRequest):
         content = f'<!DOCTYPE html><html><body><a href="/json">Try the /json page</a>'
         content += f"<h3>Source Address</h3><p>{requester}</p>"
         content += f"<h3>Request Path</h3><p>{request.path}</p>"
@@ -37,13 +31,8 @@ class DebugRouter(CodeRouter):
         for key, value in request.headers.items():
             content += f"<li>{key}: {value}</li>"
         content += "</ul></body></html>"
-
-        return HTTPResponse(
-            200,
-            {"Content-Type": "text/html; charset=utf-8"},
-            content.encode("utf-8"),
-        )
+        return self.html(content)
 
     @route("/error")
-    def error_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
+    def error_page(self, requester: TCPAddress, request: HTTPRequest):
         raise RuntimeError("DebugRouter test exception")

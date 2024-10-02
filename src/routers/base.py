@@ -1,15 +1,39 @@
 from http11.request import HTTPRequest
 from http11.response import HTTPResponse, HTTP_STATUS_CODES
 from networking.address import TCPAddress
-from abc import ABC
-from typing import Callable
+from typing import Callable, final
+from json import dumps as json_dumps
 
 
-class Router(ABC):
+class Router:
+    def __init__(self, default_headers: dict[str, str | int] = {}):
+        super().__init__()
+        self.default_headers = default_headers
+
+    # Convenience method
+    @final
     @staticmethod
-    def status_response(
-        status_code: int, headers: dict[str, str | int]
-    ) -> HTTPResponse:
+    def json(json: dict, headers: dict[str, str | int] = {}) -> HTTPResponse:
+        return HTTPResponse(
+            200,
+            headers | {"Content-Type": "application/json; charset=utf-8"},
+            json_dumps(json).encode("utf-8"),
+        )
+
+    # Convenience method
+    @final
+    @staticmethod
+    def html(html: str, headers: dict[str, str | int] = {}) -> HTTPResponse:
+        return HTTPResponse(
+            200,
+            headers | {"Content-Type": "text/html; charset=utf-8"},
+            html.encode("utf-8"),
+        )
+
+    # Convenience method
+    @final
+    @staticmethod
+    def status(status_code: int, headers: dict[str, str | int] = {}) -> HTTPResponse:
         if (
             status_code in HTTP_STATUS_CODES
             and status_code >= 200
@@ -23,13 +47,30 @@ class Router(ABC):
             )
 
         # Status code is not allowed to have a body or is unknown
-        # Copy headers and delete Content-Type
-        headers = dict(headers)
-        if "Content-Type" in headers:
-            del headers["Content-Type"]
         return HTTPResponse(status_code, headers)
 
-    def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse: ...
+    # Do not override
+    @final
+    def _raw_handle_request(
+        self, requester: TCPAddress, request: HTTPRequest
+    ) -> HTTPResponse:
+        resp = self.handle_request(requester, request)
+
+        # Build a status response if int is returned
+        if isinstance(resp, int):
+            resp = self.status(resp)
+
+        # Set header values to default values if unset
+        for key in self.default_headers:
+            if key not in resp.headers:
+                resp.headers[key] = self.default_headers[key]
+        return resp
+
+    # Override this
+    def handle_request(
+        self, requester: TCPAddress, request: HTTPRequest
+    ) -> HTTPResponse | int:
+        raise NotImplementedError()
 
 
-RouteHandler = Callable[[TCPAddress, HTTPRequest], HTTPResponse]
+RouteHandler = Callable[[TCPAddress, HTTPRequest], HTTPResponse | int]

@@ -38,12 +38,21 @@ class DefaultRouter(Router):
             if callable(value) and "_route" in dir(value):
                 self.__handlers[value._route["path"]] = value
 
+    def __log(self, message: str):
+        print(f"[DefaultRouter] {message}")
+
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         if request.path in self.__handlers:
-            # A handler was found.
-            resp = self.__handlers[request.path](
-                requester, request
-            )  # type: HTTPResponse
+            try:
+                # A handler was found.
+                resp = self.__handlers[request.path](
+                    requester, request
+                )  # type: HTTPResponse
+            except Exception as exc:
+                self.__log(
+                    f'Exception in handler for "{request.path}" Exception: {exc}'
+                )
+                return self.internal_error_page(requester, request)
 
             # Set header values to default if unset
             new_headers = resp.headers
@@ -54,6 +63,11 @@ class DefaultRouter(Router):
             # HTTPResponse is immutable
             return HTTPResponse(resp.status_code, new_headers, resp.body)
         return self.not_found_page(requester, request)
+
+    def internal_error_page(
+        self, requester: TCPAddress, request: HTTPRequest
+    ) -> HTTPResponse:
+        return HTTPResponse(500, self.default_headers, b"500 Internal Server Error")
 
     def not_found_page(
         self, requester: TCPAddress, request: HTTPRequest

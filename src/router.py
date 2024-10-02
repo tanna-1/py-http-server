@@ -44,18 +44,19 @@ class DefaultRouter(Router):
                 self.__handlers[path] = value
 
     def handle(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
-        # Parse the path to separate query parameters
-        path, _, query = request.path.partition("?")
-
-        if path in self.__handlers:
+        if request.path in self.__handlers:
             # A handler was found.
 
-            handler = self.__handlers[path]
+            handler = self.__handlers[request.path]
             try:
-                LOG.debug(f'Calling handler {handler.__qualname__} for path "{path}"')
+                LOG.debug(
+                    f'Calling handler {handler.__qualname__} for path "{request.path}"'
+                )
                 resp = handler(requester, request)  # type: HTTPResponse
             except Exception as exc:
-                LOG.exception(f'Exception in handler for path "{path}"', exc_info=exc)
+                LOG.exception(
+                    f'Exception in handler for path "{request.path}"', exc_info=exc
+                )
                 return self.internal_error_page(requester, request)
 
             # Set header values to default if unset
@@ -87,6 +88,7 @@ class DebugRouter(DefaultRouter):
             "request": {
                 "headers": request.headers,
                 "path": request.path,
+                "query": request.query,
                 "method": request.method,
                 "version": request.version,
                 "body": request.body.decode("ascii", "ignore"),
@@ -103,7 +105,8 @@ class DebugRouter(DefaultRouter):
     def root_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         content = f'<!DOCTYPE html><html><body><a href="/json">Try the /json page</a>'
         content += f"<h3>Source Address</h3><p>{requester}</p>"
-        content += f"<h3>Request URL</h3><p>{request.path}</p>"
+        content += f"<h3>Request Path</h3><p>{request.path}</p>"
+        content += f"<h3>Request Query</h3><p>{request.query}</p>"
         content += f"<h3>Request Method</h3><p>{request.method}</p>"
         content += "<h3>Request Headers</h3><ul>"
         for key, value in request.headers.items():
@@ -111,7 +114,7 @@ class DebugRouter(DefaultRouter):
         content += "</ul></body></html>"
 
         return HTTPResponse(200, body=content.encode("utf-8"))
-    
+
     @route("/error")
     def error_page(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         raise RuntimeError("DebugRouter test exception")

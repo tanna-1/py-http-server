@@ -5,10 +5,17 @@ ALLOWED_HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]
 
 class HTTPRequest:
     def __init__(
-        self, method: str, path: str, headers: dict[str, str], version: str, body: bytes
+        self,
+        method: str,
+        path: str,
+        query: str,
+        headers: dict[str, str],
+        version: str,
+        body: bytes,
     ):
         self.__method = method
         self.__path = path
+        self.__query = query
         self.__version = version
         self.__headers = headers
         self.__body = body
@@ -20,6 +27,10 @@ class HTTPRequest:
     @property
     def path(self) -> str:
         return self.__path
+
+    @property
+    def query(self) -> str:
+        return self.__query
 
     @property
     def version(self) -> str:
@@ -34,7 +45,7 @@ class HTTPRequest:
         return self.__body
 
     def __str__(self) -> str:
-        return f"{self.__method} {self.__path} {self.__version}"
+        return f"{self.__method} {self.__path}{self.__query} {self.__version}"
 
     @staticmethod
     def receive_from(
@@ -53,7 +64,7 @@ class HTTPRequest:
         try:
             header_lines = headers_raw.decode(encoding="ascii").split("\r\n")
             method, path, version = header_lines[0].split(" ")
-            
+
             if version not in ALLOWED_HTTP_VERSIONS:
                 raise ValueError("Invalid HTTP version")
 
@@ -76,4 +87,7 @@ class HTTPRequest:
             while len(body) < content_length:
                 body += conn.recv(min(recv_buffer_size, content_length - len(body)))
 
-        return HTTPRequest(method, path, headers, version, body)
+        # Split the path to actual path and query, keeps the question mark
+        path, qm, query = path.partition("?")
+        query = qm + query
+        return HTTPRequest(method, path, query, headers, version, body)

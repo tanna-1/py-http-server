@@ -89,7 +89,7 @@ class FileRouter(Router):
 
                 # Return 304 with ETag
                 if etag == request.headers.get("if-none-match", None):
-                    return self.resp_factory.status(304, headers)
+                    return self._httpf.status(304, headers)
 
             headers["Content-Type"] = self.__get_content_type(path)
             return HTTPResponse(200, headers, f.read(size))
@@ -117,7 +117,7 @@ class FileRouter(Router):
             content += f'<li><a href="{make_link(sub_path)}">{make_text(sub_path.name)}</a></li>'
 
         content += f"</ul><p>Generated on {datetime.now().isoformat()} for {requester}</p></body></html>"
-        return self.resp_factory.html(content)
+        return self._httpf.html(content)
 
     def _handle(self, requester: TCPAddress, request: HTTPRequest):
         if request.method != "GET":

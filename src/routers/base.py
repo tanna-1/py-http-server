@@ -10,7 +10,7 @@ RouterResult = HTTPResponse
 class Router:
     def __init__(self, response_factory: HTTPResponseFactory = HTTPResponseFactory()):
         super().__init__()
-        self.resp_factory = response_factory
+        self._httpf = response_factory
 
     # Do not override
     @final
@@ -19,7 +19,7 @@ class Router:
 
         # Build a status response if int is returned
         if isinstance(resp, int):
-            resp = self.resp_factory.status(resp)
+            resp = self._httpf.status(resp)
 
         return resp
 

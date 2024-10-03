@@ -9,7 +9,7 @@ LOG = logging.getLogger("middlewares.basic_auth")
 
 
 class BasicAuthMiddleware(Middleware):
-    def __init__(self, credentials: dict[str, str]) -> None:
+    def __init__(self, credentials: dict[str, str], ) -> None:
         self.__cred = credentials
         super().__init__(
             HTTPResponseFactory(
@@ -48,7 +48,7 @@ class BasicAuthMiddleware(Middleware):
             # Pass the request down the chain on successful authorization
             return None
 
-        return self.resp_factory.status(
+        return self._httpf.status(
             401,
             {"WWW-Authenticate": 'Basic realm="auth", charset="UTF-8"'},
         )

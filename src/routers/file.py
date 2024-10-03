@@ -4,6 +4,7 @@ from networking.address import TCPAddress
 from routers.base import Router
 from pathlib import Path
 from datetime import datetime
+import html
 import mimetypes
 import urllib.parse
 import os
@@ -53,52 +54,53 @@ class FileRouter(Router):
         if request.method != "GET":
             return 400
 
-        full_path = self.__document_root.joinpath(request.path.lstrip("/")).resolve()
+        raw_path = urllib.parse.unquote(request.path.lstrip("/"))
+        full_path = self.__document_root.joinpath(raw_path).resolve()
 
         # Prevent path traversal!
         if not self.__is_path_allowed(full_path):
             LOG.warning(f"Attempted path traversal! Returning 400.")
             return 400
 
-        if full_path.is_file():
-            return self.serve_file(request, full_path)
-        elif full_path.is_dir():
-            index_html = full_path.joinpath("index.html")
-            if index_html.is_file():
-                return self.serve_file(request, index_html)
-            elif self.__generate_index:
-                # Generate index if allowe and there is no index.html
-                return self.serve_folder(full_path)
+        try:
+            if full_path.is_file():
+                return self.serve_file(request, full_path)
+            elif full_path.is_dir():
+                index_html = full_path.joinpath("index.html")
+                if index_html.is_file():
+                    return self.serve_file(request, index_html)
+                elif self.__generate_index:
+                    # Generate index if allowe and there is no index.html
+                    return self.serve_folder(full_path)
+        except Exception as exc:
+            LOG.exception("Error while accesing path", exc_info=exc)
+            return 500
 
         return 404
 
     def serve_file(self, request: HTTPRequest, path: Path):
-        try:
-            with path.open("rb") as f:
-                LOG.info(f'Reading file "{path}"')
-                f.seek(0, os.SEEK_END)
-                size = f.tell()
+        with path.open("rb") as f:
+            LOG.info(f'Reading file "{path}"')
+            f.seek(0, os.SEEK_END)
+            size = f.tell()
+            f.seek(0, os.SEEK_SET)
+
+            if size > CHUNK_THRESHOLD:
+                # Not implemented yet.
+                return 500
+
+            headers = {}
+            if self.__generate_etag:
+                etag = f'"{hashlib.file_digest(f, "sha256").hexdigest()}"'
+                headers["ETag"] = etag
                 f.seek(0, os.SEEK_SET)
 
-                if size > CHUNK_THRESHOLD:
-                    # Not implemented yet.
-                    return 500
+                # Return 304 with ETag
+                if etag == request.headers.get("if-none-match", None):
+                    return self.resp_factory.status(304, headers)
 
-                headers = {}
-                if self.__generate_etag:
-                    etag = f'"{hashlib.file_digest(f, "sha256").hexdigest()}"'
-                    headers["ETag"] = etag
-                    f.seek(0, os.SEEK_SET)
-
-                    # Return 304 with ETag
-                    if etag == request.headers.get("if-none-match", None):
-                        return self.resp_factory.status(304, headers)
-
-                headers["Content-Type"] = self.__get_content_type(path)
-                return HTTPResponse(200, headers, f.read(size))
-        except Exception as exc:
-            LOG.exception("Error while reading file.", exc_info=exc)
-            return 500
+            headers["Content-Type"] = self.__get_content_type(path)
+            return HTTPResponse(200, headers, f.read(size))
 
     def serve_folder(self, path: Path):
         # Turns any path into an absolute web path (relative to document root)
@@ -106,15 +108,20 @@ class FileRouter(Router):
             rel_p = p.relative_to(self.__document_root)
             return urllib.parse.quote("/" + rel_p.as_posix())
 
-        content = f"<!DOCTYPE html><html><body><h3>{make_link(path)}</h3><ul>"
+        # Escapes text for embedding within HTML
+        def make_text(val):
+            return html.escape(str(val))
+
+        # Display path relative to document root without quoting
+        content = f"<!DOCTYPE html><html><body><h3>{make_text(path.relative_to(self.__document_root))}</h3><ul>"
 
         # Display the parent path if possible
-        if self.__is_path_allowed(path.parent):
+        if path.parent != path and self.__is_path_allowed(path.parent):
             content += f'<li><a href="{make_link(path.parent)}">..</a></li>'
 
         # Display entries for sub paths
         for sub_path in path.iterdir():
-            content += f'<li><a href="{make_link(sub_path)}">{sub_path.name}</a></li>'
+            content += f'<li><a href="{make_link(sub_path)}">{make_text(sub_path.name)}</a></li>'
 
         content += (
             f"</ul><p>Generated on {datetime.now().isoformat()}</p></body></html>"

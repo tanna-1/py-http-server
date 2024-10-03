@@ -80,7 +80,7 @@ class FileRouter(Router):
 
     def serve_file(self, request: HTTPRequest, path: Path):
         with path.open("rb") as f:
-            LOG.info(f'Reading file "{path}"')
+            LOG.debug(f'Reading file "{path}"')
             f.seek(0, os.SEEK_END)
             size = f.tell()
             f.seek(0, os.SEEK_SET)

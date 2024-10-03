@@ -15,7 +15,7 @@ class DebugRouter(CodeRouter):
                     "query": request.query,
                     "method": request.method,
                     "version": request.version,
-                    "body": request.body.decode("ascii", "ignore"),
+                    "body": request.body.decode("ascii", "replace"),
                 },
             }
         )

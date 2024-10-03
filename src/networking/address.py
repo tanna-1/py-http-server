@@ -10,7 +10,7 @@ class TCPAddress:
         if not isinstance(ip, str) or not ip:
             raise ValueError("Invalid IP")
 
-        self.__ipversion = ipaddress.ip_address(ip).version
+        self.__ipversion = ipaddress.ip_address(ip).version  # type: Literal[4, 6]
         self.__ip = ip
         self.__port = port
 

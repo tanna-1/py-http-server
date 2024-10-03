@@ -1,6 +1,5 @@
 from networking.address import TCPAddress
 from http11.request import HTTPRequest
-from routers.base import Router
 import socket
 import threading
 import logging
@@ -9,11 +8,16 @@ LOG = logging.getLogger("connection")
 
 
 class ConnectionThread(threading.Thread):
-    def __init__(self, conn: socket.socket, requester: TCPAddress, router: Router):
+    def __init__(
+        self,
+        conn: socket.socket,
+        requester: TCPAddress,
+        handler_chain: list,
+    ):
         super().__init__()
         self.__conn = conn
         self.__requester = requester
-        self.__router = router
+        self.__handler_chain = handler_chain
         self.__disposed = False
 
     def run(self):
@@ -26,8 +30,16 @@ class ConnectionThread(threading.Thread):
                 req = HTTPRequest.receive_from(self.__conn)
                 LOG.info(f"({self.__requester}) {req}")
 
-                # Pass the request to router, send the response
-                resp = self.__router(self.__requester, req)
+                # Execute the handler chain
+                resp = None
+                for handler in self.__handler_chain:
+                    if resp := handler(self.__requester, req):
+                        break
+
+                if not resp:
+                    raise RuntimeError("Handler chain did not produce a response")
+
+                # Send the response
                 resp.send_to(self.__conn, req.version)
 
                 # Close connection if not keep-alive

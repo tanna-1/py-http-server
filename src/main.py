@@ -1,6 +1,8 @@
 from networking.listener import ListenerThread
 from networking.address import TCPAddress
 from routers.debug import DebugRouter
+from routers.file import FileRouter
+from middlewares.basic_auth import BasicAuthMiddleware
 import time
 import logging
 import logs
@@ -16,14 +18,14 @@ def main():
     HTTPS_BIND_ADDRESSES = []  # type: list[TCPAddress]
     HTTPS_KEY_FILE = ""
     HTTPS_CERT_FILE = ""
-    ROUTER = DebugRouter()
+    HANDLER_CHAIN = [BasicAuthMiddleware({"test": "test"}), FileRouter(".")]
 
     listeners = []  # type: list[ListenerThread]
 
     # Create HTTP listeners
     for address in HTTP_BIND_ADDRESSES:
         try:
-            listeners.append(ListenerThread.create(address, ROUTER))
+            listeners.append(ListenerThread.create(address, HANDLER_CHAIN))
             LOG.info(f"New HTTP listener on {address}")
         except Exception as exc:
             LOG.exception(
@@ -35,7 +37,7 @@ def main():
         try:
             listeners.append(
                 ListenerThread.create_ssl(
-                    address, ROUTER, HTTPS_KEY_FILE, HTTPS_CERT_FILE
+                    address, HANDLER_CHAIN, HTTPS_KEY_FILE, HTTPS_CERT_FILE
                 )
             )
             LOG.info(f"New HTTPS listener on {address}")

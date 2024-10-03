@@ -1,6 +1,5 @@
 from networking.address import TCPAddress
 from networking.connection import ConnectionThread
-from routers.base import Router
 import socket
 import threading
 import ssl
@@ -10,7 +9,12 @@ LOG = logging.getLogger("listener")
 
 
 class ListenerThread(threading.Thread):
-    def __init__(self, socket: socket.socket, bind_address: TCPAddress, router: Router):
+    def __init__(
+        self,
+        socket: socket.socket,
+        bind_address: TCPAddress,
+        handler_chain: list,
+    ):
         """
         Socket must already be in listening state.
         """
@@ -19,7 +23,7 @@ class ListenerThread(threading.Thread):
         self.__connections = []  # type: list[ConnectionThread]
         self.__socket = socket
         self.__bind_address = bind_address
-        self.__router = router
+        self.__handler_chain = handler_chain
 
     def run(self):
         if self.__disposed:
@@ -49,7 +53,9 @@ class ListenerThread(threading.Thread):
         self.dispose()
 
     def __add_connection(self, conn: socket.socket, parsed_address: TCPAddress):
-        self.__connections.append(ConnectionThread(conn, parsed_address, self.__router))
+        self.__connections.append(
+            ConnectionThread(conn, parsed_address, self.__handler_chain)
+        )
         self.__connections[-1].start()
 
     def __clean_old_connections(self):
@@ -68,7 +74,7 @@ class ListenerThread(threading.Thread):
             LOG.info(f"({self.__bind_address}) Closed listener.")
 
     @staticmethod
-    def create(bind_address: TCPAddress, router: Router):
+    def create(bind_address: TCPAddress, handler_chain: list):
         """
         Will throw if the address can't be bound to.
         This method exists to avoid having a constructor that can throw.
@@ -82,12 +88,17 @@ class ListenerThread(threading.Thread):
         )
         sock.listen()
 
-        thread = ListenerThread(sock, bind_address, router)
+        thread = ListenerThread(sock, bind_address, handler_chain)
         thread.start()
         return thread
 
     @staticmethod
-    def create_ssl(bind_address: TCPAddress, router: Router, keyfile, certfile):
+    def create_ssl(
+        bind_address: TCPAddress,
+        handler_chain: list,
+        keyfile,
+        certfile,
+    ):
         """
         Will throw if the address can't be bound to.
         This method exists to avoid having a constructor that can throw.
@@ -105,6 +116,6 @@ class ListenerThread(threading.Thread):
         )
         sock.listen()
 
-        thread = ListenerThread(sock, bind_address, router)
+        thread = ListenerThread(sock, bind_address, handler_chain)
         thread.start()
         return thread

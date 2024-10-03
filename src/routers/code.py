@@ -1,4 +1,5 @@
 from http11.request import HTTPRequest
+from http11.response import HTTPResponseFactory
 from networking.address import TCPAddress
 from routers.base import Router, RouteHandler
 import logging
@@ -17,12 +18,14 @@ def route(path):
 class CodeRouter(Router):
     def __init__(self) -> None:
         super().__init__(
-            {
-                "X-Powered-By": "Tan's HTTP Server",
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0",
-            }
+            HTTPResponseFactory(
+                {
+                    "X-Powered-By": "Tan's HTTP Server",
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                }
+            )
         )
 
         # Discover @route methods

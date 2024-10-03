@@ -6,7 +6,7 @@ from routers.code import CodeRouter, route
 class DebugRouter(CodeRouter):
     @route("/json")
     def json_page(self, requester: TCPAddress, request: HTTPRequest):
-        return self.json(
+        return self.resp_factory.json(
             {
                 "requester": str(requester),
                 "request": {
@@ -31,7 +31,7 @@ class DebugRouter(CodeRouter):
         for key, value in request.headers.items():
             content += f"<li>{key}: {value}</li>"
         content += "</ul></body></html>"
-        return self.html(content)
+        return self.resp_factory.html(content)
 
     @route("/error")
     def error_page(self, requester: TCPAddress, request: HTTPRequest):

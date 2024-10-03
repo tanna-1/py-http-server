@@ -1,5 +1,5 @@
 from http11.request import HTTPRequest
-from http11.response import HTTPResponse
+from http11.response import HTTPResponse, HTTPResponseFactory
 from networking.address import TCPAddress
 from routers.base import Router
 from pathlib import Path
@@ -23,12 +23,14 @@ class FileRouter(Router):
         generate_etag: bool = True,
     ) -> None:
         super().__init__(
-            {
-                "X-Powered-By": "Tan's HTTP Server",
-                "Cache-Control": "no-cache, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0",
-            }
+            HTTPResponseFactory(
+                {
+                    "X-Powered-By": "Tan's HTTP Server",
+                    "Cache-Control": "no-cache, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                }
+            )
         )
 
         self.__document_root = Path(document_root).resolve()
@@ -90,7 +92,7 @@ class FileRouter(Router):
 
                     # Return 304 with ETag
                     if etag == request.headers.get("if-none-match", None):
-                        return self.status(304, headers)
+                        return self.resp_factory.status(304, headers)
 
                 headers["Content-Type"] = self.__get_content_type(path)
                 return HTTPResponse(200, headers, f.read(size))
@@ -117,4 +119,4 @@ class FileRouter(Router):
         content += (
             f"</ul><p>Generated on {datetime.now().isoformat()}</p></body></html>"
         )
-        return self.html(content)
+        return self.resp_factory.html(content)

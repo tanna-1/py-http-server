@@ -1,4 +1,5 @@
 import socket
+import json
 
 HTTP_STATUS_CODES = {
     100: "Continue",
@@ -57,24 +58,28 @@ HTTP_STATUS_CODES = {
     511: "Network Authentication Required",
 }
 
+HeadersType = dict[str, str | int]
+
 
 class HTTPResponse:
     def __init__(
         self,
         status_code: int,
-        headers: dict[str, str | int] = {},
-        body: str | bytes = b"",
+        headers: HeadersType = {},
+        body: bytes = b"",
     ):
         self.__status_code = status_code
         self.__headers = headers
-        self.__body = body.encode("ascii") if isinstance(body, str) else body
+        if not isinstance(body, bytes):
+            raise ValueError("Body must be of type bytes")
+        self.__body = body
 
     @property
     def status_code(self) -> int:
         return self.__status_code
 
     @property
-    def headers(self) -> dict[str, str | int]:
+    def headers(self) -> HeadersType:
         return self.__headers
 
     @property
@@ -102,3 +107,75 @@ class HTTPResponse:
 
         if len(self.__body) > 0:
             conn.send(self.__body)
+
+
+class HTTPResponseFactory:
+    def __init__(
+        self, default_headers: HeadersType = {}, default_encoding: str = "utf-8"
+    ):
+        self.default_headers = default_headers
+        self.default_encoding = default_encoding
+
+    def json(
+        self,
+        value: dict,
+        status_code: int = 200,
+        additional_headers: HeadersType = {},
+        encoding: str | None = None,
+    ) -> HTTPResponse:
+        encoding = encoding if encoding else self.default_encoding
+        headers = (
+            self.default_headers
+            | additional_headers
+            | {"Content-Type": f"application/json; charset={encoding}"}
+        )
+
+        return HTTPResponse(
+            status_code,
+            headers,
+            json.dumps(value).encode(encoding),
+        )
+
+    def html(
+        self,
+        value: str,
+        status_code: int = 200,
+        additional_headers: HeadersType = {},
+        encoding: str | None = None,
+    ) -> HTTPResponse:
+        encoding = encoding if encoding else self.default_encoding
+        headers = (
+            self.default_headers
+            | additional_headers
+            | {"Content-Type": f"text/html; charset={encoding}"}
+        )
+
+        return HTTPResponse(
+            status_code,
+            headers,
+            value.encode(encoding),
+        )
+
+    def status(
+        self,
+        status_code: int,
+        additional_headers: HeadersType = {},
+        encoding: str | None = None,
+    ) -> HTTPResponse:
+        encoding = encoding if encoding else self.default_encoding
+        headers = self.default_headers | additional_headers
+
+        if (
+            status_code in HTTP_STATUS_CODES
+            and status_code >= 200
+            and status_code not in [204, 205, 304]
+        ):
+            # Set the body to the status code text
+            return HTTPResponse(
+                status_code,
+                headers | {"Content-Type": f"text/plain; charset={encoding}"},
+                HTTP_STATUS_CODES[status_code].encode(encoding),
+            )
+
+        # Status code is not allowed to have a body or is unknown
+        return HTTPResponse(status_code, headers)

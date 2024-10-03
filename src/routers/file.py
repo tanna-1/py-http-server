@@ -47,7 +47,7 @@ class FileRouter(Router):
                 ret += f"; charset={encoding}"
         return ret
 
-    def handle_request(self, requester: TCPAddress, request: HTTPRequest):
+    def _handle(self, requester: TCPAddress, request: HTTPRequest):
         if request.method != "GET":
             return 400
 

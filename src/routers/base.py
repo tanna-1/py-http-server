@@ -1,7 +1,7 @@
 from http11.request import HTTPRequest
 from http11.response import HTTPResponse, HTTP_STATUS_CODES
 from networking.address import TCPAddress
-from typing import Callable, final
+from typing import Any, Callable, final
 from json import dumps as json_dumps
 
 
@@ -51,10 +51,8 @@ class Router:
 
     # Do not override
     @final
-    def _raw_handle_request(
-        self, requester: TCPAddress, request: HTTPRequest
-    ) -> HTTPResponse:
-        resp = self.handle_request(requester, request)
+    def __call__(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
+        resp = self._handle(requester, request)
 
         # Build a status response if int is returned
         if isinstance(resp, int):
@@ -67,7 +65,7 @@ class Router:
         return resp
 
     # Override this
-    def handle_request(
+    def _handle(
         self, requester: TCPAddress, request: HTTPRequest
     ) -> HTTPResponse | int:
         raise NotImplementedError()

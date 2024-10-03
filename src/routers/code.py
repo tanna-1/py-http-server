@@ -34,7 +34,7 @@ class CodeRouter(Router):
                 LOG.debug(f'Discovered handler "{value.__qualname__}" for "{path}"')
                 self.__handlers[path] = value
 
-    def handle_request(self, requester: TCPAddress, request: HTTPRequest):
+    def _handle(self, requester: TCPAddress, request: HTTPRequest):
         if not request.path in self.__handlers:
             return 404
 

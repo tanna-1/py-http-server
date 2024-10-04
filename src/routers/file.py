@@ -87,7 +87,7 @@ class FileRouter(Router):
 
             if size > CHUNK_THRESHOLD:
                 # Not implemented yet.
-                return self.http.status(500)
+                return self.http.status(400)
 
             """RFC9110: The server generating a 304 response MUST generate
                 any of the following header fields that would have been sent
@@ -159,7 +159,7 @@ class FileRouter(Router):
         # Prevent path traversal and optionally forbid symlinks
         if not self.__is_path_allowed(path):
             LOG.warning(f"Path not allowed: {path}")
-            return self.http.status(403)
+            return self.http.status(400)
 
         try:
             if path.is_file():

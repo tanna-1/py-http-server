@@ -13,7 +13,7 @@ class ListenerThread(threading.Thread):
         self,
         socket: socket.socket,
         bind_address: TCPAddress,
-        handler_chain: list,
+        handler,
     ):
         """
         Socket must already be in listening state.
@@ -23,7 +23,7 @@ class ListenerThread(threading.Thread):
         self.__connections = []  # type: list[ConnectionThread]
         self.__socket = socket
         self.__bind_address = bind_address
-        self.__handler_chain = handler_chain
+        self.__handler = handler
 
     def run(self):
         if self.__disposed:
@@ -54,7 +54,7 @@ class ListenerThread(threading.Thread):
 
     def __add_connection(self, conn: socket.socket, parsed_address: TCPAddress):
         self.__connections.append(
-            ConnectionThread(conn, parsed_address, self.__handler_chain)
+            ConnectionThread(conn, parsed_address, self.__handler)
         )
         self.__connections[-1].start()
 
@@ -95,7 +95,7 @@ class ListenerThread(threading.Thread):
     @staticmethod
     def create_ssl(
         bind_address: TCPAddress,
-        handler_chain: list,
+        handler,
         keyfile,
         certfile,
     ):
@@ -116,6 +116,6 @@ class ListenerThread(threading.Thread):
         )
         sock.listen()
 
-        thread = ListenerThread(sock, bind_address, handler_chain)
+        thread = ListenerThread(sock, bind_address, handler)
         thread.start()
         return thread

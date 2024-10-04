@@ -1,4 +1,5 @@
 from http11.request import HTTPRequest
+from http11.request_handler import RequestHandler
 from http11.response import HTTPResponseFactory
 from networking.address import TCPAddress
 from middlewares.base import Middleware
@@ -9,9 +10,10 @@ LOG = logging.getLogger("middlewares.basic_auth")
 
 
 class BasicAuthMiddleware(Middleware):
-    def __init__(self, credentials: dict[str, str], ) -> None:
+    def __init__(self, credentials: dict[str, str], next: RequestHandler) -> None:
         self.__cred = credentials
         super().__init__(
+            next,
             HTTPResponseFactory(
                 {
                     "X-Powered-By": "Tan's HTTP Server",
@@ -19,7 +21,7 @@ class BasicAuthMiddleware(Middleware):
                     "Pragma": "no-cache",
                     "Expires": "0",
                 }
-            )
+            ),
         )
 
     def __verify_authorization(self, header_value: str) -> bool:
@@ -45,8 +47,7 @@ class BasicAuthMiddleware(Middleware):
         if "authorization" in request.headers and self.__verify_authorization(
             request.headers["authorization"]
         ):
-            # Pass the request down the chain on successful authorization
-            return None
+            return self.next(requester, request)
 
         return self._httpf.status(
             401,

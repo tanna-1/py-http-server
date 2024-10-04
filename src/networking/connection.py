@@ -12,12 +12,12 @@ class ConnectionThread(threading.Thread):
         self,
         conn: socket.socket,
         requester: TCPAddress,
-        handler_chain: list,
+        handler,
     ):
         super().__init__()
         self.__conn = conn
         self.__requester = requester
-        self.__handler_chain = handler_chain
+        self.__handler = handler
         self.__disposed = False
 
     def run(self):
@@ -31,10 +31,7 @@ class ConnectionThread(threading.Thread):
                 LOG.info(f"({self.__requester}) {req}")
 
                 # Execute the handler chain
-                resp = None
-                for handler in self.__handler_chain:
-                    if resp := handler(self.__requester, req):
-                        break
+                resp = self.__handler(self.__requester, req)
 
                 if not resp:
                     raise RuntimeError("Handler chain did not produce a response")

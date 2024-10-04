@@ -18,14 +18,14 @@ def main():
     HTTPS_BIND_ADDRESSES = []  # type: list[TCPAddress]
     HTTPS_KEY_FILE = ""
     HTTPS_CERT_FILE = ""
-    HANDLER_CHAIN = [BasicAuthMiddleware({"test": "test"}), FileRouter(".")]
+    HANDLER = BasicAuthMiddleware({"test": "test"}, next=FileRouter("."))
 
     listeners = []  # type: list[ListenerThread]
 
     # Create HTTP listeners
     for address in HTTP_BIND_ADDRESSES:
         try:
-            listeners.append(ListenerThread.create(address, HANDLER_CHAIN))
+            listeners.append(ListenerThread.create(address, HANDLER))
             LOG.info(f"New HTTP listener on {address}")
         except Exception as exc:
             LOG.exception(
@@ -37,7 +37,7 @@ def main():
         try:
             listeners.append(
                 ListenerThread.create_ssl(
-                    address, HANDLER_CHAIN, HTTPS_KEY_FILE, HTTPS_CERT_FILE
+                    address, HANDLER, HTTPS_KEY_FILE, HTTPS_CERT_FILE
                 )
             )
             LOG.info(f"New HTTPS listener on {address}")

@@ -1,21 +1,18 @@
 from http11.request import HTTPRequest
 from http11.response import HTTPResponse, HTTPResponseFactory
+from http11.request_handler import RequestHandler
 from networking.address import TCPAddress
-from typing import Callable, final
-
-# Middlewares produce HTTPResponse to end the chain
-# or None to pass the request to the next entry in the chain.
-MiddlewareResult = HTTPResponse | None
+from typing import final
 
 
-class Middleware:
-    def __init__(self, response_factory: HTTPResponseFactory = HTTPResponseFactory()):
-        super().__init__()
+class Middleware(RequestHandler):
+    def __init__(self, next: RequestHandler, response_factory=HTTPResponseFactory()):
         self._httpf = response_factory
+        self.next = next
 
     # Do not override
     @final
-    def __call__(self, requester: TCPAddress, request: HTTPRequest) -> MiddlewareResult:
+    def __call__(self, requester: TCPAddress, request: HTTPRequest) -> HTTPResponse:
         resp = self._handle(requester, request)
 
         # Build a status response if int is returned
@@ -27,8 +24,5 @@ class Middleware:
     # Override this
     def _handle(
         self, requester: TCPAddress, request: HTTPRequest
-    ) -> MiddlewareResult | int:
+    ) -> HTTPResponse | int:
         raise NotImplementedError()
-
-
-RouteHandler = Callable[[TCPAddress, HTTPRequest], HTTPResponse | int]

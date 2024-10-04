@@ -1,7 +1,8 @@
 from http11.request import HTTPRequest
-from http11.response import HTTPResponseFactory
+from http11.response import HTTPResponse, HTTPResponseFactory
 from networking.address import TCPAddress
-from routers.base import Router, RouteHandler
+from routers.base import Router
+from typing import Callable
 import logging
 
 LOG = logging.getLogger("routers.code")
@@ -29,7 +30,9 @@ class CodeRouter(Router):
         )
 
         # Discover @route methods
-        self.__handlers = {}  # type: dict[str, RouteHandler]
+        self.__handlers = (
+            {}
+        )  # type: dict[str, Callable[[TCPAddress, HTTPRequest], HTTPResponse | int]]
         for member in dir(self):
             value = getattr(self, member)
             if callable(value) and "_route" in dir(value):

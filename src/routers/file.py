@@ -128,7 +128,12 @@ class FileRouter(Router):
 
         # Display path relative to document root
         title = make_text(path.relative_to(self.__document_root).as_posix())
-        content = f"<!DOCTYPE html><html><head><title>{title}</title></head><body><h3>{title}</h3><ul>"
+        
+        # Prettify the path :)
+        title = f"/{title}" if title != "." else "/"
+        content = f"<!DOCTYPE html><html><head><title>{title}</title>"
+        content += "<style>body{font-family:sans-serif;margin: 2rem auto;max-width: 80vw;}</style>"
+        content += f"</head><body><h3>{title}</h3><ul>"
 
         # Display the parent path if possible
         if path.parent != path and self.__is_path_allowed(path.parent):

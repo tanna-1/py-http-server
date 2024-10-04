@@ -3,6 +3,7 @@ from networking.listener import ListenerThread
 from networking.address import TCPAddress
 from routers.file import FileRouter
 from middlewares.basic_auth import BasicAuthMiddleware
+from middlewares.compress import CompressMiddleware
 import time
 import logging
 import logs
@@ -18,8 +19,10 @@ def main():
     HTTPS_BIND_ADDRESSES = []  # type: list[TCPAddress]
     HTTPS_KEY_FILE = ""
     HTTPS_CERT_FILE = ""
-    HANDLER = DefaultMiddleware(
-        BasicAuthMiddleware(FileRouter("."), credentials={"test": "test"})
+    HANDLER = CompressMiddleware(
+        DefaultMiddleware(
+            BasicAuthMiddleware(FileRouter("."), credentials={"test": "test"})
+        )
     )
 
     listeners = []  # type: list[ListenerThread]

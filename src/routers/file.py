@@ -42,7 +42,6 @@ class FileRouter(Router):
         super().__init__(
             HTTPResponseFactory(
                 {
-                    "X-Powered-By": "Tan's HTTP Server",
                     "Cache-Control": "no-cache, must-revalidate",
                     "Pragma": "no-cache",
                     "Expires": "0",

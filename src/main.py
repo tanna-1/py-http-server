@@ -1,3 +1,4 @@
+from middlewares.default import DefaultMiddleware
 from networking.listener import ListenerThread
 from networking.address import TCPAddress
 from routers.debug import DebugRouter
@@ -18,7 +19,9 @@ def main():
     HTTPS_BIND_ADDRESSES = []  # type: list[TCPAddress]
     HTTPS_KEY_FILE = ""
     HTTPS_CERT_FILE = ""
-    HANDLER = BasicAuthMiddleware({"test": "test"}, next=FileRouter("."))
+    HANDLER = DefaultMiddleware(
+        BasicAuthMiddleware({"test": "test"}, next=FileRouter("."))
+    )
 
     listeners = []  # type: list[ListenerThread]
 

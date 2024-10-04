@@ -16,7 +16,6 @@ class BasicAuthMiddleware(Middleware):
             next,
             HTTPResponseFactory(
                 {
-                    "X-Powered-By": "Tan's HTTP Server",
                     "Cache-Control": "no-cache, no-store, must-revalidate",
                     "Pragma": "no-cache",
                     "Expires": "0",

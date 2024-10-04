@@ -1,6 +1,5 @@
+from http11.constants import HTTP_VERSIONS
 import socket
-
-ALLOWED_HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]
 
 
 class HTTPRequest:
@@ -65,7 +64,7 @@ class HTTPRequest:
             header_lines = headers_raw.decode(encoding="ascii").split("\r\n")
             method, path, version = header_lines[0].split(" ")
 
-            if version not in ALLOWED_HTTP_VERSIONS:
+            if version not in HTTP_VERSIONS:
                 raise ValueError("Invalid HTTP version")
 
             headers = {}  # type: dict[str,str]

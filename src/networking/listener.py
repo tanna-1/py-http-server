@@ -1,3 +1,4 @@
+from http11.request_handler import RequestHandler
 from networking.address import TCPAddress
 from networking.connection import ConnectionThread
 import socket
@@ -13,7 +14,7 @@ class ListenerThread(threading.Thread):
         self,
         socket: socket.socket,
         bind_address: TCPAddress,
-        handler,
+        handler: RequestHandler,
     ):
         """
         Socket must already be in listening state.

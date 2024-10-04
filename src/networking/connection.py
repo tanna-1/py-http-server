@@ -1,3 +1,4 @@
+from http11.request_handler import RequestHandler
 from networking.address import TCPAddress
 from http11.request import HTTPRequest
 import socket
@@ -12,13 +13,25 @@ class ConnectionThread(threading.Thread):
         self,
         conn: socket.socket,
         requester: TCPAddress,
-        handler,
+        handler: RequestHandler,
     ):
         super().__init__()
         self.__conn = conn
         self.__requester = requester
         self.__handler = handler
         self.__disposed = False
+
+    @staticmethod
+    def __get_connection_policy(req: HTTPRequest) -> True:
+        if req.version == "HTTP1.0":
+            # "close" by default unless "keep-alive" specified
+            if req.headers.get("connection", None) != "keep-alive":
+                return "close"
+        elif req.version == "HTTP1.1":
+            # "close" only if "close" specified
+            if req.headers.get("connection", None) == "close":
+                return "close"
+        return "keep-alive"
 
     def run(self):
         if self.__disposed:
@@ -32,15 +45,14 @@ class ConnectionThread(threading.Thread):
 
                 # Execute the handler chain
                 resp = self.__handler(self.__requester, req)
-
-                if not resp:
-                    raise RuntimeError("Handler chain did not produce a response")
+                conn_policy = self.__get_connection_policy(req)
+                resp.headers["Connection"] = conn_policy
 
                 # Send the response
                 resp.send_to(self.__conn, req.version)
 
-                # Close connection if not keep-alive
-                if req.headers.get("connection", "close") != "keep-alive":
+                # Close the connection if necessary
+                if conn_policy == "close":
                     break
         except Exception as exc:
             # Suppress error messages on dispose() call

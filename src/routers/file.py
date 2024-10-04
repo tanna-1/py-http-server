@@ -88,7 +88,7 @@ class FileRouter(Router):
 
             if size > CHUNK_THRESHOLD:
                 # Not implemented yet.
-                return 500
+                return self.http.status(500)
 
             """RFC9110: The server generating a 304 response MUST generate
                 any of the following header fields that would have been sent
@@ -104,7 +104,7 @@ class FileRouter(Router):
 
                 # Return 304 if ETag matches
                 if etag == request.headers.get("if-none-match", None):
-                    return self._httpf.status(304, headers)
+                    return self.http.status(304, headers)
 
             """RFC9110: A recipient MUST ignore If-Modified-Since
                 if the request contains an If-None-Match header field"""
@@ -140,11 +140,11 @@ class FileRouter(Router):
             content += f'<li><a href="{make_link(sub_path)}">{make_text(sub_path.name)}</a></li>'
 
         content += f"</ul><p>Generated on {datetime.now().isoformat()} for {requester}</p></body></html>"
-        return self._httpf.html(content)
+        return self.http.html(content)
 
-    def _handle(self, requester: TCPAddress, request: HTTPRequest):
+    def __call__(self, requester: TCPAddress, request: HTTPRequest):
         if request.method != "GET":
-            return 400
+            return self.http.status(400)
 
         # Unquote HTTP path, append it to document root
         # The path is unsafe at this point
@@ -155,7 +155,7 @@ class FileRouter(Router):
         # Prevent path traversal and optionally forbid symlinks
         if not self.__is_path_allowed(path):
             LOG.warning(f"Path not allowed: {path}")
-            return 403
+            return self.http.status(403)
 
         try:
             if path.is_file():
@@ -169,6 +169,6 @@ class FileRouter(Router):
                     return self.__serve_folder(requester, path)
         except Exception as exc:
             LOG.exception("Error while accesing path", exc_info=exc)
-            return 500
+            return self.http.status(500)
 
-        return 404
+        return self.http.status(404)

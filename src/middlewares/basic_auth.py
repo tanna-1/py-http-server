@@ -43,13 +43,13 @@ class BasicAuthMiddleware(Middleware):
         )
         return False
 
-    def _handle(self, requester: TCPAddress, request: HTTPRequest):
+    def __call__(self, requester: TCPAddress, request: HTTPRequest):
         if "authorization" in request.headers and self.__verify_authorization(
             request.headers["authorization"]
         ):
             return self.next(requester, request)
 
-        return self._httpf.status(
+        return self.http.status(
             401,
             {"WWW-Authenticate": 'Basic realm="auth", charset="UTF-8"'},
         )

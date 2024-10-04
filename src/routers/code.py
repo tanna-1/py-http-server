@@ -32,7 +32,7 @@ class CodeRouter(Router):
         # Discover @route methods
         self.__handlers = (
             {}
-        )  # type: dict[str, Callable[[TCPAddress, HTTPRequest], HTTPResponse | int]]
+        )  # type: dict[str, Callable[[TCPAddress, HTTPRequest], HTTPResponse]]
         for member in dir(self):
             value = getattr(self, member)
             if callable(value) and "_route" in dir(value):
@@ -40,9 +40,9 @@ class CodeRouter(Router):
                 LOG.debug(f'Discovered handler "{value.__qualname__}" for "{path}"')
                 self.__handlers[path] = value
 
-    def _handle(self, requester: TCPAddress, request: HTTPRequest):
+    def __call__(self, requester: TCPAddress, request: HTTPRequest):
         if not request.path in self.__handlers:
-            return 404
+            return self.http.status(404)
 
         handler = self.__handlers[request.path]
         try:
@@ -54,4 +54,4 @@ class CodeRouter(Router):
             LOG.exception(
                 f'Exception in handler for path "{request.path}"', exc_info=exc
             )
-            return 500
+            return self.http.status(500)

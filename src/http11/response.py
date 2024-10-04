@@ -13,23 +13,39 @@ class HTTPResponse:
         headers: HeadersType = {},
         body: bytes = b"",
     ):
-        self.__status_code = status_code
-        self.__headers = headers
-        if not isinstance(body, bytes):
-            raise ValueError("Body must be of type bytes")
-        self.__body = body
+        self.status_code = status_code
+        self.headers = headers
+        self.body = body
 
     @property
     def status_code(self) -> int:
         return self.__status_code
 
+    @status_code.setter
+    def status_code(self, value: int):
+        if not isinstance(value, int):
+            raise ValueError("status_code must be of int")
+        self.__status_code = value
+
     @property
     def headers(self) -> HeadersType:
         return self.__headers
 
+    @headers.setter
+    def headers(self, value: HeadersType):
+        if not isinstance(value, dict):
+            raise ValueError("headers must be of HeadersType")
+        self.__headers = value
+
     @property
     def body(self) -> bytes:
         return self.__body
+
+    @body.setter
+    def body(self, value: bytes):
+        if not isinstance(value, bytes):
+            raise ValueError("body must be of type bytes")
+        self.__body = value
 
     def send_to(self, conn: socket.socket, http_version: str):
         self.__headers["Content-Length"] = len(self.__body)

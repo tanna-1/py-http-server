@@ -1,9 +1,10 @@
 from http11.request import HTTPRequest
 from http11.response import HTTPResponse, HTTPResponseFactory
+from http11.constants import HEADER_DATE_FORMAT
 from networking.address import TCPAddress
 from routers.base import Router
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import html
 import mimetypes
 import urllib.parse
@@ -21,7 +22,8 @@ class FileRouter(Router):
         self,
         document_root: str | os.PathLike,
         generate_index: bool = True,
-        generate_etag: bool = True,
+        enable_etag: bool = True,
+        enable_last_modified: bool = True,
         disable_symlinks: bool = True,
     ) -> None:
         """Inits FileRouter.
@@ -29,7 +31,8 @@ class FileRouter(Router):
         Args:
         document_root -- Document root.
         generate_index -- If True, generated index pages will be served for directories.
-        generate_etag -- If True, ETag will be calculated and sent with every response.
+        enable_etag -- If True, ETag will be calculated and sent with every response.
+        enable_last_modified -- If True, Last-Modified header will be sent with every response.
         disable_symlinks -- If True, symlinks won't be followed.
 
         WARNING: Enabling symlinks may lead to unexpected results with authentication middlewares.
@@ -49,7 +52,8 @@ class FileRouter(Router):
 
         self.__document_root = Path(document_root).resolve()
         self.__generate_index = generate_index
-        self.__generate_etag = generate_etag
+        self.__enable_etag = enable_etag
+        self.__enable_last_modified = enable_last_modified
         self.__disable_symlinks = disable_symlinks
 
     def __is_path_allowed(self, path: Path):
@@ -70,6 +74,11 @@ class FileRouter(Router):
                 ret += f"; charset={encoding}"
         return ret
 
+    def __get_last_modified(self, path: Path) -> str:
+        return datetime.fromtimestamp(path.lstat().st_mtime, tz=timezone.utc).strftime(
+            HEADER_DATE_FORMAT
+        )
+
     def __serve_file(self, request: HTTPRequest, path: Path):
         with path.open("rb") as f:
             LOG.debug(f'Reading file "{path}"')
@@ -81,17 +90,31 @@ class FileRouter(Router):
                 # Not implemented yet.
                 return 500
 
+            """RFC9110: The server generating a 304 response MUST generate
+                any of the following header fields that would have been sent
+                in a 200 (OK) response to the same request:
+                    Content-Location, Date, ETag, and Vary
+                    Cache-Control and Expires (see [CACHING])
+            """
             headers = {}
-            if self.__generate_etag:
-                etag = f'"{hashlib.file_digest(f, "sha256").hexdigest()}"'
-                headers["ETag"] = etag
-                f.seek(0, os.SEEK_SET)
+            if self.__enable_etag:
+                etag = headers["ETag"] = (
+                    f'"{hashlib.file_digest(f, "sha256").hexdigest()}"'
+                )
 
-                # Return 304 with ETag
+                # Return 304 if ETag matches
                 if etag == request.headers.get("if-none-match", None):
                     return self._httpf.status(304, headers)
 
+            """RFC9110: A recipient MUST ignore If-Modified-Since
+                if the request contains an If-None-Match header field"""
+            if self.__enable_last_modified:
+                headers["Last-Modified"] = self.__get_last_modified(path)
+                # TODO: Add checks for If-Modified-Since, If-Unmodified-Since and If-Match
+
             headers["Content-Type"] = self.__get_content_type(path)
+
+            f.seek(0, os.SEEK_SET)
             return HTTPResponse(200, headers, f.read(size))
 
     def __serve_folder(self, requester: TCPAddress, path: Path):

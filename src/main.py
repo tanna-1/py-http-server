@@ -1,7 +1,6 @@
 from middlewares.default import DefaultMiddleware
 from networking.listener import ListenerThread
 from networking.address import TCPAddress
-from routers.debug import DebugRouter
 from routers.file import FileRouter
 from middlewares.basic_auth import BasicAuthMiddleware
 import time
@@ -20,7 +19,7 @@ def main():
     HTTPS_KEY_FILE = ""
     HTTPS_CERT_FILE = ""
     HANDLER = DefaultMiddleware(
-        BasicAuthMiddleware({"test": "test"}, next=FileRouter("."))
+        BasicAuthMiddleware(FileRouter("."), credentials={"test": "test"})
     )
 
     listeners = []  # type: list[ListenerThread]

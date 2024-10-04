@@ -10,17 +10,15 @@ LOG = logging.getLogger("middlewares.basic_auth")
 
 
 class BasicAuthMiddleware(Middleware):
-    def __init__(self, credentials: dict[str, str], next: RequestHandler) -> None:
+    def __init__(self, next: RequestHandler, credentials: dict[str, str]) -> None:
+        super().__init__(next)
         self.__cred = credentials
-        super().__init__(
-            next,
-            HTTPResponseFactory(
-                {
-                    "Cache-Control": "no-cache, no-store, must-revalidate",
-                    "Pragma": "no-cache",
-                    "Expires": "0",
-                }
-            ),
+        self.__http = HTTPResponseFactory(
+            {
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            }
         )
 
     def __verify_authorization(self, header_value: str) -> bool:
@@ -32,14 +30,10 @@ class BasicAuthMiddleware(Middleware):
         )
 
         if username in self.__cred and self.__cred[username] == password:
-            LOG.debug(
-                f'Basic authentication values "{username}:{password}" are correct.'
-            )
+            LOG.debug(f"Basic authentication correct credentials.")
             return True
 
-        LOG.warning(
-            f'Basic authentication values "{username}:{password}" are incorrect.'
-        )
+        LOG.warning(f"Basic authentication incorrect credentials.")
         return False
 
     def __call__(self, requester: TCPAddress, request: HTTPRequest):
@@ -48,7 +42,7 @@ class BasicAuthMiddleware(Middleware):
         ):
             return self.next(requester, request)
 
-        return self.http.status(
+        return self.__http.status(
             401,
             {"WWW-Authenticate": 'Basic realm="auth", charset="UTF-8"'},
         )

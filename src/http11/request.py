@@ -1,5 +1,6 @@
 from http11.constants import HTTP_VERSIONS
 import socket
+import urllib.parse
 
 
 class HTTPRequest:
@@ -86,7 +87,12 @@ class HTTPRequest:
             while len(body) < content_length:
                 body += conn.recv(min(recv_buffer_size, content_length - len(body)))
 
+        # Parse percent encoding
+        # Warning: This step is necessary to prevent unexpected vulnerabilities
+        path = urllib.parse.unquote(path)
+
         # Split the path to actual path and query, keeps the question mark
         path, qm, query = path.partition("?")
         query = qm + query
+
         return HTTPRequest(method, path, query, headers, version, body)

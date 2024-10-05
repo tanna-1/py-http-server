@@ -128,7 +128,7 @@ class FileRouter(Router):
 
         # Display path relative to document root
         title = make_text(path.relative_to(self.__document_root).as_posix())
-        
+
         # Prettify the path :)
         title = f"/{title}" if title != "." else "/"
         content = f"<!DOCTYPE html><html><head><title>{title}</title>"
@@ -150,11 +150,9 @@ class FileRouter(Router):
         if request.method != "GET":
             return self.http.status(400)
 
-        # Unquote HTTP path, append it to document root
-        # The path is unsafe at this point
-        path = self.__document_root.joinpath(
-            urllib.parse.unquote(request.path.lstrip("/"))
-        )
+        # Append the path to document root
+        # https://bugs.python.org/issue44452
+        path = self.__document_root.joinpath(request.path.lstrip("/"))
 
         # Prevent path traversal and optionally forbid symlinks
         if not self.__is_path_allowed(path):

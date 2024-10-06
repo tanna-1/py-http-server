@@ -4,7 +4,7 @@
 This project implements an HTTP(S) server supporting HTTP versions 1.0 and 1.1.
 
 ## Configuration
-All configuration is in `__main__.py`. Set the `HANDLER` variable to construct handler chains using components below.
+All configuration is in `main.py`. Set the `HANDLER` variable to construct handler chains using components below.
 
 ### Middlewares
 1. **BasicAuthMiddleware**  

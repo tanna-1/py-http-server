@@ -1,9 +1,10 @@
 from ..http.constants import STATUS_CODES
+from typing import Union, Optional
 import socket
 import json
 
 
-HeadersType = dict[str, str | int]
+HeadersType = dict[str, Union[str, int]]
 
 
 class HTTPResponse:
@@ -82,7 +83,7 @@ class HTTPResponseFactory:
         value: dict,
         status_code: int = 200,
         additional_headers: HeadersType = {},
-        encoding: str | None = None,
+        encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
         headers = (
@@ -102,7 +103,7 @@ class HTTPResponseFactory:
         value: str,
         status_code: int = 200,
         additional_headers: HeadersType = {},
-        encoding: str | None = None,
+        encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
         headers = (
@@ -121,7 +122,7 @@ class HTTPResponseFactory:
         self,
         status_code: int,
         additional_headers: HeadersType = {},
-        encoding: str | None = None,
+        encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
         headers = self.default_headers | additional_headers

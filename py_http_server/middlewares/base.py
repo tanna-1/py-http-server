@@ -1,4 +1,4 @@
-from http11.request_handler import RequestHandler
+from ..http.request_handler import RequestHandler
 
 
 class Middleware(RequestHandler):

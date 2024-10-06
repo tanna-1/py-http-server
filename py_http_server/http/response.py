@@ -1,4 +1,4 @@
-from http11.constants import STATUS_CODES
+from ..http.constants import STATUS_CODES
 import socket
 import json
 

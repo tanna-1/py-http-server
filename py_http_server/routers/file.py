@@ -1,8 +1,8 @@
-from http11.request import HTTPRequest
-from http11.response import HTTPResponse, HTTPResponseFactory
-from http11.constants import HEADER_DATE_FORMAT
-from networking.address import TCPAddress
-from routers.base import Router
+from ..http.request import HTTPRequest
+from ..http.response import HTTPResponse, HTTPResponseFactory
+from ..http.constants import HEADER_DATE_FORMAT
+from ..networking.address import TCPAddress
+from ..routers.base import Router
 from pathlib import Path
 from datetime import datetime, timezone
 import html

@@ -1,4 +1,4 @@
-from http11.constants import HTTP_VERSIONS
+from ..http.constants import HTTP_VERSIONS
 import socket
 import urllib.parse
 

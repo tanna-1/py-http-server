@@ -1,17 +1,17 @@
-from middlewares.default import DefaultMiddleware
-from networking.listener import ListenerThread
-from networking.address import TCPAddress
-from routers.file import FileRouter
-from middlewares.basic_auth import BasicAuthMiddleware
-from middlewares.compress import CompressMiddleware
+from .middlewares.default import DefaultMiddleware
+from .networking.listener import ListenerThread
+from .networking.address import TCPAddress
+from .routers.file import FileRouter
+from .middlewares.basic_auth import BasicAuthMiddleware
+from .middlewares.compress import CompressMiddleware
+from . import logs
 import time
 import logging
-import logs
 
 LOG = logging.getLogger("main")
 
 
-def main():
+def _app_main_unwrapped():
     HTTP_BIND_ADDRESSES = [
         TCPAddress("127.0.0.1", 80),
         TCPAddress("::1", 80),
@@ -64,12 +64,16 @@ def main():
         listener.dispose()
 
 
-if __name__ == "__main__":
+def app_main():
     logs.init()
     try:
-        main()
+        _app_main_unwrapped()
     except KeyboardInterrupt:
         pass
     except Exception as exc:
         LOG.fatal("Unrecoverable error", exc_info=exc)
     logs.shutdown()
+
+
+if __name__ == "__main__":
+    app_main()

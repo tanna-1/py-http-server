@@ -1,7 +1,7 @@
-from http11.request import HTTPRequest
-from http11.response import HTTPResponse, HTTPResponseFactory
-from networking.address import TCPAddress
-from routers.base import Router
+from ..http.request import HTTPRequest
+from ..http.response import HTTPResponse, HTTPResponseFactory
+from ..networking.address import TCPAddress
+from ..routers.base import Router
 from typing import Callable
 import logging
 

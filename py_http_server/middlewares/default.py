@@ -1,8 +1,8 @@
-from http11.constants import HEADER_DATE_FORMAT
-from http11.request import HTTPRequest
-from http11.request_handler import RequestHandler
-from networking.address import TCPAddress
-from middlewares.base import Middleware
+from ..http.constants import HEADER_DATE_FORMAT
+from ..http.request import HTTPRequest
+from ..http.request_handler import RequestHandler
+from ..networking.address import TCPAddress
+from ..middlewares.base import Middleware
 from datetime import datetime, timezone
 
 

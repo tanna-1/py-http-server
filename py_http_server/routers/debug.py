@@ -1,6 +1,6 @@
-from http11.request import HTTPRequest
-from networking.address import TCPAddress
-from routers.code import CodeRouter, route
+from ..http.request import HTTPRequest
+from ..networking.address import TCPAddress
+from ..routers.code import CodeRouter, route
 
 
 class DebugRouter(CodeRouter):

@@ -1,6 +1,6 @@
-from http11.request_handler import RequestHandler
-from networking.address import TCPAddress
-from http11.request import HTTPRequest
+from ..http.request_handler import RequestHandler
+from ..networking.address import TCPAddress
+from ..http.request import HTTPRequest
 import socket
 import threading
 import logging

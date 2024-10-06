@@ -1,5 +1,5 @@
 from ..http.response import HTTPResponseFactory
-from ..http.request_handler import RequestHandler
+from ..common import RequestHandler
 
 
 class Router(RequestHandler):

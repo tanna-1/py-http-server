@@ -3,10 +3,10 @@ from ..http.response import HTTPResponse, HTTPResponseFactory
 from ..http.constants import HEADER_DATE_FORMAT
 from ..networking.address import TCPAddress
 from ..routers.base import Router
+from ..common import PathLike
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import Union
 import html
 import mimetypes
 import urllib.parse
@@ -21,7 +21,7 @@ CHUNK_THRESHOLD = 1048576  # 1MiB
 class FileRouter(Router):
     def __init__(
         self,
-        document_root: Union[str, os.PathLike],
+        document_root: PathLike,
         generate_index: bool = True,
         enable_etag: bool = True,
         enable_last_modified: bool = True,

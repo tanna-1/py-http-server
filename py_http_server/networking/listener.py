@@ -1,4 +1,4 @@
-from ..http.request_handler import RequestHandler
+from ..common import RequestHandler
 from ..networking.address import TCPAddress
 from ..networking.connection import ConnectionThread
 from .. import log

@@ -1,37 +1,30 @@
-from .middlewares.default import DefaultMiddleware
 from .networking.listener import ListenerThread
 from .networking.address import TCPAddress
-from .routers.file import FileRouter
-from .middlewares.basic_auth import BasicAuthMiddleware
-from .middlewares.compress import CompressMiddleware
+from .common import PathLike, RequestHandler
 from . import log
 import time
 
 LOG = log.getLogger("main")
 
 
-def app_main():
+def app_main(
+    handler_chain: RequestHandler,
+    http_listeners: list[TCPAddress] = [],
+    https_listeners: list[TCPAddress] = [],
+    https_key_file: PathLike = None,
+    https_cert_file: PathLike = None,
+):
     log.init()
     try:
-        HTTP_BIND_ADDRESSES = [
-            TCPAddress("127.0.0.1", 80),
-            TCPAddress("::1", 80),
-        ]  # type: list[TCPAddress]
-        HTTPS_BIND_ADDRESSES = []  # type: list[TCPAddress]
-        HTTPS_KEY_FILE = ""
-        HTTPS_CERT_FILE = ""
-        HANDLER = CompressMiddleware(
-            DefaultMiddleware(
-                BasicAuthMiddleware(FileRouter("."), credentials={"test": "test"})
-            )
-        )
+        if https_listeners and (not https_key_file or not https_cert_file):
+            raise ValueError("Cannot create HTTP listeners without key and cert files")
 
         listeners = []  # type: list[ListenerThread]
 
         # Create HTTP listeners
-        for address in HTTP_BIND_ADDRESSES:
+        for address in http_listeners:
             try:
-                listeners.append(ListenerThread.create(address, HANDLER))
+                listeners.append(ListenerThread.create(address, handler_chain))
                 LOG.info(f"New HTTP listener on {address}")
             except Exception as exc:
                 LOG.exception(
@@ -39,11 +32,11 @@ def app_main():
                 )
 
         # Create HTTPS listeners
-        for address in HTTPS_BIND_ADDRESSES:
+        for address in https_listeners:
             try:
                 listeners.append(
                     ListenerThread.create_ssl(
-                        address, HANDLER, HTTPS_KEY_FILE, HTTPS_CERT_FILE
+                        address, handler_chain, https_key_file, https_cert_file
                     )
                 )
                 LOG.info(f"New HTTPS listener on {address}")

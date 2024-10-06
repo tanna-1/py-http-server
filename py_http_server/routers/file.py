@@ -3,7 +3,7 @@ from ..http.response import HTTPResponse, HTTPResponseFactory
 from ..http.constants import HEADER_DATE_FORMAT
 from ..networking.address import TCPAddress
 from ..routers.base import Router
-from ..common import PathLike
+from ..common import PathLike, file_sha256
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
@@ -98,9 +98,7 @@ class FileRouter(Router):
             """
             headers = {}
             if self.__enable_etag:
-                etag = headers["ETag"] = (
-                    f'"{hashlib.file_digest(f, "sha256").hexdigest()}"'
-                )
+                etag = headers["ETag"] = f'"{file_sha256(f)}"'
 
                 # Return 304 if ETag matches
                 if etag == request.headers.get("if-none-match", None):

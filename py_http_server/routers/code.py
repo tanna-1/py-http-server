@@ -2,10 +2,10 @@ from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
 from ..networking.address import TCPAddress
 from ..routers.base import Router
+from .. import log
 from typing import Callable
-import logging
 
-LOG = logging.getLogger("routers.code")
+LOG = log.getLogger("routers.code")
 
 
 def route(path):

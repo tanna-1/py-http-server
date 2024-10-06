@@ -27,6 +27,10 @@ class ColoredFormatter(logging.Formatter):
         return cls.FORMATTERS.get(record.levelno, CONSOLE_FORMAT).format(record)
 
 
+def getLogger(name: str):
+    return logging.getLogger(name)
+
+
 def init():
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(ColoredFormatter)  # type: ignore

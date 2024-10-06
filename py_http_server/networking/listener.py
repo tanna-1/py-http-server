@@ -1,12 +1,12 @@
 from ..http.request_handler import RequestHandler
 from ..networking.address import TCPAddress
 from ..networking.connection import ConnectionThread
+from .. import log
 import socket
 import threading
 import ssl
-import logging
 
-LOG = logging.getLogger("listener")
+LOG = log.getLogger("listener")
 
 
 class ListenerThread(threading.Thread):

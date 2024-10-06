@@ -3,10 +3,10 @@ from ..http.request_handler import RequestHandler
 from ..http.response import HTTPResponseFactory
 from ..networking.address import TCPAddress
 from ..middlewares.base import Middleware
-import logging
+from .. import log
 import base64
 
-LOG = logging.getLogger("middlewares.basic_auth")
+LOG = log.getLogger("middlewares.basic_auth")
 
 
 class BasicAuthMiddleware(Middleware):

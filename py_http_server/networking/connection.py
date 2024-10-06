@@ -1,11 +1,11 @@
 from ..http.request_handler import RequestHandler
 from ..networking.address import TCPAddress
 from ..http.request import HTTPRequest
+from .. import log
 import socket
 import threading
-import logging
 
-LOG = logging.getLogger("connection")
+LOG = log.getLogger("connection")
 
 
 class ConnectionThread(threading.Thread):

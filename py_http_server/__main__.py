@@ -4,11 +4,10 @@ from .networking.address import TCPAddress
 from .routers.file import FileRouter
 from .middlewares.basic_auth import BasicAuthMiddleware
 from .middlewares.compress import CompressMiddleware
-from . import logs
+from . import log
 import time
-import logging
 
-LOG = logging.getLogger("main")
+LOG = log.getLogger("main")
 
 
 def _app_main_unwrapped():
@@ -65,14 +64,14 @@ def _app_main_unwrapped():
 
 
 def app_main():
-    logs.init()
+    log.init()
     try:
         _app_main_unwrapped()
     except KeyboardInterrupt:
         pass
     except Exception as exc:
         LOG.fatal("Unrecoverable error", exc_info=exc)
-    logs.shutdown()
+    log.shutdown()
 
 
 if __name__ == "__main__":

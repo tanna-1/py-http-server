@@ -2,9 +2,9 @@ from ..http.request import HTTPRequest
 from ..http.request_handler import RequestHandler
 from ..networking.address import TCPAddress
 from ..middlewares.base import Middleware
-import logging
+from .. import log
 
-LOG = logging.getLogger("middlewares.compress")
+LOG = log.getLogger("middlewares.compress")
 ENCODINGS = {}
 
 try:

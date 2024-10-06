@@ -3,17 +3,17 @@ from ..http.response import HTTPResponse, HTTPResponseFactory
 from ..http.constants import HEADER_DATE_FORMAT
 from ..networking.address import TCPAddress
 from ..routers.base import Router
+from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
 import html
 import mimetypes
 import urllib.parse
 import os
-import logging
 import hashlib
 
 
-LOG = logging.getLogger("routers.file")
+LOG = log.getLogger("routers.file")
 CHUNK_THRESHOLD = 1048576  # 1MiB
 
 

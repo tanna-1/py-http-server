@@ -1,6 +1,9 @@
 from ..http.constants import HTTP_VERSIONS
+from typing import Union
 import socket
 import urllib.parse
+
+HeadersType = dict[str, Union[str, int]]
 
 
 class HTTPRequest:
@@ -9,7 +12,7 @@ class HTTPRequest:
         method: str,
         path: str,
         query: str,
-        headers: dict[str, str],
+        headers: HeadersType,
         version: str,
         body: bytes,
     ):
@@ -21,30 +24,30 @@ class HTTPRequest:
         self.__body = body
 
     @property
-    def method(self) -> str:
+    def method(self):
         return self.__method.upper()
 
     @property
-    def path(self) -> str:
+    def path(self):
         return self.__path
 
     @property
-    def query(self) -> str:
+    def query(self):
         return self.__query
 
     @property
-    def version(self) -> str:
+    def version(self):
         return self.__version.upper()
 
     @property
-    def headers(self) -> dict[str, str]:
+    def headers(self):
         return self.__headers
 
     @property
-    def body(self) -> bytes:
+    def body(self):
         return self.__body
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"{self.__method} {self.__path}{self.__query} {self.__version}"
 
     @staticmethod

@@ -26,7 +26,7 @@ class FileRouter(Router):
         enable_etag: bool = True,
         enable_last_modified: bool = True,
         disable_symlinks: bool = True,
-    ) -> None:
+    ):
         """Inits FileRouter.
 
         Args:
@@ -65,7 +65,7 @@ class FileRouter(Router):
         # Resolved path must be within document root
         return resolved_path.is_relative_to(self.__document_root)
 
-    def __get_content_type(self, path: Path) -> str:
+    def __get_content_type(self, path: Path):
         ret = "application/octet-stream"
         mime_type, encoding = mimetypes.guess_type(path, False)
         if mime_type:
@@ -74,7 +74,7 @@ class FileRouter(Router):
                 ret += f"; charset={encoding}"
         return ret
 
-    def __get_last_modified(self, path: Path) -> str:
+    def __get_last_modified(self, path: Path):
         return datetime.fromtimestamp(path.lstat().st_mtime, tz=timezone.utc).strftime(
             HEADER_DATE_FORMAT
         )

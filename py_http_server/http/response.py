@@ -3,7 +3,6 @@ from typing import Union, Optional
 import socket
 import json
 
-
 HeadersType = dict[str, Union[str, int]]
 
 
@@ -19,7 +18,7 @@ class HTTPResponse:
         self.body = body
 
     @property
-    def status_code(self) -> int:
+    def status_code(self):
         return self.__status_code
 
     @status_code.setter
@@ -29,17 +28,17 @@ class HTTPResponse:
         self.__status_code = value
 
     @property
-    def headers(self) -> HeadersType:
+    def headers(self):
         return self.__headers
 
     @headers.setter
     def headers(self, value: HeadersType):
         if not isinstance(value, dict):
-            raise ValueError("headers must be of HeadersType")
+            raise ValueError("headers must be a dict")
         self.__headers = value
 
     @property
-    def body(self) -> bytes:
+    def body(self):
         return self.__body
 
     @body.setter

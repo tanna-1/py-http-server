@@ -10,7 +10,7 @@ LOG = log.getLogger("middlewares.basic_auth")
 
 
 class BasicAuthMiddleware(Middleware):
-    def __init__(self, next: RequestHandler, credentials: dict[str, str]) -> None:
+    def __init__(self, next: RequestHandler, credentials: dict[str, str]):
         super().__init__(next)
         self.__cred = credentials
         self.__http = HTTPResponseFactory(
@@ -21,7 +21,7 @@ class BasicAuthMiddleware(Middleware):
             }
         )
 
-    def __verify_authorization(self, header_value: str) -> bool:
+    def __verify_authorization(self, header_value: str):
         auth_type, _, data = header_value.partition(" ")
         if not data or auth_type != "Basic":
             return False

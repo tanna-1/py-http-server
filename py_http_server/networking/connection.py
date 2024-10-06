@@ -22,7 +22,7 @@ class ConnectionThread(threading.Thread):
         self.__disposed = False
 
     @staticmethod
-    def __get_connection_policy(req: HTTPRequest) -> True:
+    def __get_connection_policy(req: HTTPRequest):
         if req.version == "HTTP1.0":
             # "close" by default unless "keep-alive" specified
             if req.headers.get("connection", None) != "keep-alive":

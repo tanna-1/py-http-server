@@ -17,7 +17,7 @@ def route(path):
 
 
 class CodeRouter(Router):
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__(
             HTTPResponseFactory(
                 {

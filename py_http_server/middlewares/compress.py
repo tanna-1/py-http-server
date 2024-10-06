@@ -42,13 +42,13 @@ class CompressMiddleware(Middleware):
         next: RequestHandler,
         compression_preferences: list[str] = ["br", "zstd", "gzip", "x-gzip" "deflate"],
         compression_threshold: int = 50,
-    ) -> None:
+    ):
         LOG.info(f"Enabled { ', '.join(ENCODINGS.keys())}")
         self.__compression_preferences = compression_preferences
         self.__compression_threshold = compression_threshold
         super().__init__(next)
 
-    def __get_best_encoding(self, request: HTTPRequest) -> str:
+    def __get_best_encoding(self, request: HTTPRequest):
         mutual_encodings = []
 
         if "accept-encoding" in request.headers:

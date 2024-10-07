@@ -66,12 +66,16 @@ class CompressMiddleware(Middleware):
     def __call__(self, requester: TCPAddress, request: HTTPRequest):
         resp = self.next(requester, request)
 
-        # Do not compress responses smaller than compression threshold
-        if len(resp.body) < self.__compression_threshold:
+        # Check if the response is compressible, file responses will not be compressed
+        if (
+            not resp.body
+            or not resp.body.raw_content
+            or len(resp.body.raw_content) < self.__compression_threshold
+        ):
             return resp
 
         if encoding := self.__get_best_encoding(request):
-            resp.body = ENCODINGS[encoding](resp.body)
+            resp.body.raw_content = ENCODINGS[encoding](resp.body.raw_content)
             resp.headers["Content-Encoding"] = encoding
 
         return resp

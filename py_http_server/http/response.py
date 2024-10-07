@@ -2,6 +2,40 @@ from ..http.constants import STATUS_CODES
 from typing import Any, Optional
 import socket
 import json
+import os
+
+
+class ResponseBody:
+    def __init__(
+        self, raw_content: Optional[bytes] = None, file_path: Optional[str] = None
+    ) -> None:
+        self.raw_content = raw_content
+        self.__file_path = file_path
+        if file_path:
+            with open(file_path, "rb") as f:
+                f.seek(0, os.SEEK_END)
+                self.__file_len = f.tell()
+
+    def __len__(self):
+        if self.raw_content:
+            return len(self.raw_content)
+        return self.__file_len
+
+    def send_to(self, conn: socket.socket):
+        if self.raw_content:
+            conn.send(self.raw_content)
+        elif self.__file_path:
+            with open(self.__file_path, "rb") as f:
+                conn.sendfile(f)
+
+    @staticmethod
+    def from_file(file_path: str):
+        return ResponseBody(file_path=file_path)
+
+    @staticmethod
+    def from_bytes(raw_content: bytes):
+        return ResponseBody(raw_content=raw_content)
+
 
 HeadersType = dict[str, str]
 
@@ -11,7 +45,7 @@ class HTTPResponse:
         self,
         status_code: int,
         headers: HeadersType = {},
-        body: bytes = b"",
+        body: Optional[ResponseBody] = None,
     ):
         self.status_code = status_code
         self.headers = headers
@@ -38,13 +72,22 @@ class HTTPResponse:
         return self.__body
 
     @body.setter
-    def body(self, value: bytes):
-        if not isinstance(value, bytes):
-            raise ValueError("body must be of type bytes")
+    def body(self, value: Optional[ResponseBody]):
         self.__body = value
 
+    @property
+    def body_file(self):
+        return self.__body_file
+
+    @body_file.setter
+    def body_file(self, value: Optional[str]):
+        self.__body_file = value
+
     def send_to(self, conn: socket.socket, http_version: str):
-        self.__headers["Content-Length"] = str(len(self.__body))
+        if self.body:
+            self.__headers["Content-Length"] = str(len(self.body))
+        else:
+            self.__headers["Content-Length"] = "0"
 
         header_lines = "".join(
             f"{header}: {value}\r\n" for header, value in self.__headers.items()
@@ -58,12 +101,10 @@ class HTTPResponse:
         response_header = (
             f"{http_version} {status_code_str}\r\n{header_lines}\r\n".encode("ascii")
         )
-
-        # Send the HTTP header
         conn.send(response_header)
 
-        if len(self.__body) > 0:
-            conn.send(self.__body)
+        if self.body:
+            self.body.send_to(conn)
 
 
 class HTTPResponseFactory:
@@ -90,7 +131,7 @@ class HTTPResponseFactory:
         return HTTPResponse(
             status_code,
             headers,
-            json.dumps(value).encode(encoding),
+            ResponseBody.from_bytes(json.dumps(value).encode(encoding)),
         )
 
     def html(
@@ -110,7 +151,7 @@ class HTTPResponseFactory:
         return HTTPResponse(
             status_code,
             headers,
-            value.encode(encoding),
+            ResponseBody.from_bytes(value.encode(encoding)),
         )
 
     def status(
@@ -131,7 +172,7 @@ class HTTPResponseFactory:
             return HTTPResponse(
                 status_code,
                 headers | {"Content-Type": f"text/plain; charset={encoding}"},
-                STATUS_CODES[status_code].encode(encoding),
+                ResponseBody.from_bytes(STATUS_CODES[status_code].encode(encoding)),
             )
 
         # Status code is not allowed to have a body or is unknown

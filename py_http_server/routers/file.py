@@ -1,5 +1,5 @@
 from ..http.request import HTTPRequest
-from ..http.response import HTTPResponse, HTTPResponseFactory
+from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
 from ..http.constants import HEADER_DATE_FORMAT
 from ..networking.address import TCPAddress
 from ..routers.base import Router
@@ -80,40 +80,31 @@ class FileRouter(Router):
         )
 
     def __serve_file(self, request: HTTPRequest, path: Path):
-        with path.open("rb") as f:
-            LOG.debug(f'Reading file "{path}"')
-            f.seek(0, os.SEEK_END)
-            size = f.tell()
-            f.seek(0, os.SEEK_SET)
+        """RFC9110: The server generating a 304 response MUST generate
+        any of the following header fields that would have been sent
+        in a 200 (OK) response to the same request:
+            Content-Location, Date, ETag, and Vary
+            Cache-Control and Expires (see [CACHING])
+        """
+        LOG.debug(f'Reading file "{path}"')
 
-            if size > CHUNK_THRESHOLD:
-                # Not implemented yet.
-                return self.http.status(400)
-
-            """RFC9110: The server generating a 304 response MUST generate
-                any of the following header fields that would have been sent
-                in a 200 (OK) response to the same request:
-                    Content-Location, Date, ETag, and Vary
-                    Cache-Control and Expires (see [CACHING])
-            """
-            headers = {}
-            if self.__enable_etag:
+        headers = {}
+        if self.__enable_etag:
+            with path.open("rb") as f:
                 etag = headers["ETag"] = f'"{file_sha256(f)}"'
 
-                # Return 304 if ETag matches
-                if etag == request.headers.get("if-none-match", None):
-                    return self.http.status(304, headers)
+            # Return 304 if ETag matches
+            if etag == request.headers.get("if-none-match", None):
+                return self.http.status(304, headers)
 
-            """RFC9110: A recipient MUST ignore If-Modified-Since
+        """RFC9110: A recipient MUST ignore If-Modified-Since
                 if the request contains an If-None-Match header field"""
-            if self.__enable_last_modified:
-                headers["Last-Modified"] = self.__get_last_modified(path)
-                # TODO: Add checks for If-Modified-Since, If-Unmodified-Since and If-Match
+        if self.__enable_last_modified:
+            headers["Last-Modified"] = self.__get_last_modified(path)
+            # TODO: Add checks for If-Modified-Since, If-Unmodified-Since and If-Match
 
-            headers["Content-Type"] = self.__get_content_type(path)
-
-            f.seek(0, os.SEEK_SET)
-            return HTTPResponse(200, headers, f.read(size))
+        headers["Content-Type"] = self.__get_content_type(path)
+        return HTTPResponse(200, headers, ResponseBody.from_file(str(path)))
 
     def __serve_folder(self, requester: TCPAddress, path: Path):
         # Turns any path into an absolute web path (relative to document root)

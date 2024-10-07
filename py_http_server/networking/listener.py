@@ -75,7 +75,7 @@ class ListenerThread(threading.Thread):
             LOG.info(f"({self.__bind_address}) Closed listener.")
 
     @staticmethod
-    def create(bind_address: TCPAddress, handler_chain: list):
+    def create(bind_address: TCPAddress, handler: RequestHandler):
         """
         Will throw if the address can't be bound to.
         This method exists to avoid having a constructor that can throw.
@@ -89,14 +89,14 @@ class ListenerThread(threading.Thread):
         )
         sock.listen()
 
-        thread = ListenerThread(sock, bind_address, handler_chain)
+        thread = ListenerThread(sock, bind_address, handler)
         thread.start()
         return thread
 
     @staticmethod
     def create_ssl(
         bind_address: TCPAddress,
-        handler,
+        handler: RequestHandler,
         keyfile,
         certfile,
     ):
@@ -112,9 +112,10 @@ class ListenerThread(threading.Thread):
             family=sock_family,
         )
 
-        sock = ssl.wrap_socket(
-            sock, keyfile=keyfile, certfile=certfile, server_side=True
-        )
+        context = ssl.create_default_context()
+        context.load_cert_chain(certfile=certfile, keyfile=keyfile)
+
+        sock = context.wrap_socket(sock, server_side=True)
         sock.listen()
 
         thread = ListenerThread(sock, bind_address, handler)

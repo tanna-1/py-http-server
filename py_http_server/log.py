@@ -22,9 +22,8 @@ class ColoredFormatter(logging.Formatter):
     }
     DEFAULT_FORMATTER = logging.Formatter()
 
-    @classmethod
-    def format(cls, record):
-        return cls.FORMATTERS.get(record.levelno, CONSOLE_FORMAT).format(record)
+    def format(self, record):
+        return self.FORMATTERS.get(record.levelno, CONSOLE_FORMAT).format(record)
 
 
 def getLogger(name: str):
@@ -33,7 +32,7 @@ def getLogger(name: str):
 
 def init():
     consoleHandler = logging.StreamHandler()
-    consoleHandler.setFormatter(ColoredFormatter)  # type: ignore
+    consoleHandler.setFormatter(ColoredFormatter())  # type: ignore
     logging.basicConfig(level=logging.DEBUG, handlers=[consoleHandler])
 
 

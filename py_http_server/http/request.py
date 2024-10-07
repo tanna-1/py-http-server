@@ -1,9 +1,8 @@
 from ..http.constants import HTTP_VERSIONS
-from typing import Union
 import socket
 import urllib.parse
 
-HeadersType = dict[str, Union[str, int]]
+HeadersType = dict[str, str]
 
 
 class HTTPRequest:
@@ -53,9 +52,9 @@ class HTTPRequest:
     @staticmethod
     def receive_from(
         conn: socket.socket,
-        max_content_length=10_000_000,
-        max_header_size=32768,
-        recv_buffer_size=32768,
+        max_content_length: int = 10_000_000,
+        max_header_size: int = 32768,
+        recv_buffer_size: int = 32768,
     ):
         response = b""
         while b"\r\n\r\n" not in response:
@@ -71,7 +70,7 @@ class HTTPRequest:
             if version not in HTTP_VERSIONS:
                 raise ValueError("Invalid HTTP version")
 
-            headers = {}  # type: dict[str,str]
+            headers: HeadersType = {}
             for line in header_lines[1:]:
                 key, _, val = line.partition(":")
                 headers[key.lower()] = val.strip()

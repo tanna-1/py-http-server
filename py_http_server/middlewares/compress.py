@@ -1,3 +1,4 @@
+from typing import Any, Callable
 from ..http.request import HTTPRequest
 from ..common import RequestHandler
 from ..networking.address import TCPAddress

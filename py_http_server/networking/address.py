@@ -1,5 +1,4 @@
 import ipaddress
-from .. import log
 from typing import Literal
 
 

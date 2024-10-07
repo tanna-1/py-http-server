@@ -1,3 +1,4 @@
+from typing import Optional
 from .networking.listener import ListenerThread
 from .networking.address import TCPAddress
 from .common import PathLike, RequestHandler
@@ -11,8 +12,8 @@ def app_main(
     handler_chain: RequestHandler,
     http_listeners: list[TCPAddress] = [],
     https_listeners: list[TCPAddress] = [],
-    https_key_file: PathLike = None,
-    https_cert_file: PathLike = None,
+    https_key_file: Optional[PathLike] = None,
+    https_cert_file: Optional[PathLike] = None,
 ):
     log.init()
     try:

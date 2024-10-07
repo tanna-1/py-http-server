@@ -2,11 +2,9 @@ from .networking.address import TCPAddress
 from .http.request import HTTPRequest
 from .http.response import HTTPResponse
 from abc import ABC, abstractmethod
-from typing import Union
-import os
 import hashlib
 
-PathLike = Union[str, bytes, os.PathLike]
+PathLike = str
 
 
 class RequestHandler(ABC):

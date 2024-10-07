@@ -1,9 +1,9 @@
 from ..http.constants import STATUS_CODES
-from typing import Union, Optional
+from typing import Any, Optional
 import socket
 import json
 
-HeadersType = dict[str, Union[str, int]]
+HeadersType = dict[str, str]
 
 
 class HTTPResponse:
@@ -23,8 +23,6 @@ class HTTPResponse:
 
     @status_code.setter
     def status_code(self, value: int):
-        if not isinstance(value, int):
-            raise ValueError("status_code must be of int")
         self.__status_code = value
 
     @property
@@ -33,8 +31,6 @@ class HTTPResponse:
 
     @headers.setter
     def headers(self, value: HeadersType):
-        if not isinstance(value, dict):
-            raise ValueError("headers must be a dict")
         self.__headers = value
 
     @property
@@ -48,7 +44,7 @@ class HTTPResponse:
         self.__body = value
 
     def send_to(self, conn: socket.socket, http_version: str):
-        self.__headers["Content-Length"] = len(self.__body)
+        self.__headers["Content-Length"] = str(len(self.__body))
 
         header_lines = "".join(
             f"{header}: {value}\r\n" for header, value in self.__headers.items()
@@ -79,7 +75,7 @@ class HTTPResponseFactory:
 
     def json(
         self,
-        value: dict,
+        value: Any,
         status_code: int = 200,
         additional_headers: HeadersType = {},
         encoding: Optional[str] = None,

@@ -1,7 +1,7 @@
 from typing import Optional
 from .networking.listener import ListenerThread
 from .networking.address import TCPAddress
-from .common import PathLike, RequestHandler
+from .common import StrPath, RequestHandler
 from . import log
 import time
 
@@ -12,8 +12,8 @@ def app_main(
     handler_chain: RequestHandler,
     http_listeners: list[TCPAddress] = [],
     https_listeners: list[TCPAddress] = [],
-    https_key_file: Optional[PathLike] = None,
-    https_cert_file: Optional[PathLike] = None,
+    https_key_file: Optional[StrPath] = None,
+    https_cert_file: Optional[StrPath] = None,
 ):
     log.init()
     try:

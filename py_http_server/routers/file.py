@@ -3,15 +3,13 @@ from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
 from ..http.constants import HEADER_DATE_FORMAT
 from ..networking.address import TCPAddress
 from ..routers.base import Router
-from ..common import PathLike, file_sha256
+from ..common import StrPath, file_etag
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
 import html
 import mimetypes
 import urllib.parse
-import os
-import hashlib
 
 
 LOG = log.getLogger("routers.file")
@@ -21,7 +19,7 @@ CHUNK_THRESHOLD = 1048576  # 1MiB
 class FileRouter(Router):
     def __init__(
         self,
-        document_root: PathLike,
+        document_root: StrPath,
         generate_index: bool = True,
         enable_etag: bool = True,
         enable_last_modified: bool = True,
@@ -90,8 +88,7 @@ class FileRouter(Router):
 
         headers = {}
         if self.__enable_etag:
-            with path.open("rb") as f:
-                etag = headers["ETag"] = f'"{file_sha256(f)}"'
+            etag = headers["ETag"] = file_etag(path)
 
             # Return 304 if ETag matches
             if etag == request.headers.get("if-none-match", None):

@@ -2,9 +2,11 @@ from .networking.address import TCPAddress
 from .http.request import HTTPRequest
 from .http.response import HTTPResponse
 from abc import ABC, abstractmethod
-import hashlib
+from pathlib import Path
+from math import ceil
+import base64
 
-PathLike = str
+StrPath = str
 
 
 class RequestHandler(ABC):
@@ -14,31 +16,11 @@ class RequestHandler(ABC):
     ) -> HTTPResponse: ...
 
 
-# Hash the contents of a file-like object.
-def file_sha256(fileobj, _bufsize=2**18) -> str:
-    digestobj = hashlib.sha256()
+# Generate nginx-like ETag
+def file_etag(path: Path) -> str:
+    def int_to_b64(value: int) -> str:
+        raw_value = value.to_bytes(max(ceil(value.bit_length() / 8), 1))
+        return base64.b64encode(raw_value).decode()
 
-    if hasattr(fileobj, "getbuffer"):
-        # io.BytesIO object, use zero-copy buffer
-        digestobj.update(fileobj.getbuffer())
-        return digestobj.hexdigest()
-
-    # Only binary files implement readinto().
-    if not (
-        hasattr(fileobj, "readinto")
-        and hasattr(fileobj, "readable")
-        and fileobj.readable()
-    ):
-        raise ValueError(
-            f"'{fileobj!r}' is not a file-like object in binary reading mode."
-        )
-
-    buf = bytearray(_bufsize)
-    view = memoryview(buf)
-    while True:
-        size = fileobj.readinto(buf)
-        if size == 0:
-            break  # EOF
-        digestobj.update(view[:size])
-
-    return digestobj.hexdigest()
+    stat = Path(path).stat()
+    return f'W/"{int_to_b64(stat.st_size)}-{int_to_b64(stat.st_mtime_ns)}"'

@@ -1,6 +1,5 @@
-from ..http.constants import HEADER_DATE_FORMAT
 from ..http.request import HTTPRequest
-from ..common import RequestHandler
+from ..common import RequestHandler, to_http_date
 from ..networking.address import TCPAddress
 from ..middlewares.base import Middleware
 from datetime import datetime, timezone
@@ -14,6 +13,6 @@ class DefaultMiddleware(Middleware):
         resp = self.next(requester, request)
         resp.headers = {
             "Server": "Tan's HTTP Server",
-            "Date": datetime.now(timezone.utc).strftime(HEADER_DATE_FORMAT),
+            "Date": to_http_date(datetime.now(timezone.utc)),
         } | resp.headers
         return resp

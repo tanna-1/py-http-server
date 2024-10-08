@@ -1,9 +1,8 @@
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
-from ..http.constants import HEADER_DATE_FORMAT
 from ..networking.address import TCPAddress
 from ..routers.base import Router
-from ..common import StrPath, file_etag
+from ..common import StrPath, file_etag, from_http_date, to_http_date
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
@@ -72,10 +71,10 @@ class FileRouter(Router):
                 ret += f"; charset={encoding}"
         return ret
 
-    def __get_last_modified(self, path: Path):
-        return datetime.fromtimestamp(path.lstat().st_mtime, tz=timezone.utc).strftime(
-            HEADER_DATE_FORMAT
-        )
+    # Gets the file last_modified time with second resolution for comparison with HTTP dates
+    def __get_last_modified(self, path: Path) -> datetime:
+        value = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+        return value.replace(microsecond=0)
 
     def __serve_file(self, request: HTTPRequest, path: Path):
         """RFC9110: The server generating a 304 response MUST generate
@@ -94,11 +93,19 @@ class FileRouter(Router):
             if etag == request.headers.get("if-none-match", None):
                 return self.http.status(304, headers)
 
-        """RFC9110: A recipient MUST ignore If-Modified-Since
-                if the request contains an If-None-Match header field"""
         if self.__enable_last_modified:
-            headers["Last-Modified"] = self.__get_last_modified(path)
-            # TODO: Add checks for If-Modified-Since, If-Unmodified-Since and If-Match
+            last_modified = self.__get_last_modified(path)
+            headers["Last-Modified"] = to_http_date(last_modified)
+
+            """RFC9110: A recipient MUST ignore If-Modified-Since
+               if the request contains an If-None-Match header field"""
+            if (
+                "if-modified-since" in request.headers
+                and not "if-none-match" in request.headers
+            ):
+                if_modified_since = from_http_date(request.headers["if-modified-since"])
+                if if_modified_since and if_modified_since >= last_modified:
+                    return self.http.status(304, headers)
 
         headers["Content-Type"] = self.__get_content_type(path)
         return HTTPResponse(200, headers, ResponseBody.from_file(str(path)))

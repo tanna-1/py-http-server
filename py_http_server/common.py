@@ -1,6 +1,9 @@
+from py_http_server.http.constants import HEADER_DATE_FORMAT
 from .networking.address import TCPAddress
 from .http.request import HTTPRequest
 from .http.response import HTTPResponse
+from datetime import datetime, timezone
+from typing import Optional
 from abc import ABC, abstractmethod
 from pathlib import Path
 from math import ceil
@@ -14,6 +17,18 @@ class RequestHandler(ABC):
     def __call__(
         self, requester: TCPAddress, request: "HTTPRequest"
     ) -> HTTPResponse: ...
+
+
+# Parse HTTP header date format
+def from_http_date(value: str) -> Optional[datetime]:
+    try:
+        return datetime.strptime(value, HEADER_DATE_FORMAT).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def to_http_date(value: datetime) -> str:
+    return value.strftime(HEADER_DATE_FORMAT)
 
 
 # Generate nginx-like ETag

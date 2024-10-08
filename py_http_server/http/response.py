@@ -1,40 +1,45 @@
 from ..http.constants import STATUS_CODES
-from typing import Any, Optional
+from typing import Any, Optional, Union, Literal, cast
+from pathlib import Path
 import socket
 import json
-import os
 
 
 class ResponseBody:
-    def __init__(
-        self, raw_content: Optional[bytes] = None, file_path: Optional[str] = None
-    ) -> None:
-        self.raw_content = raw_content
-        self.__file_path = file_path
-        if file_path:
-            with open(file_path, "rb") as f:
-                f.seek(0, os.SEEK_END)
-                self.__file_len = f.tell()
+    def __init__(self, content: Union[bytes, Path]):
+        self.content = content
 
     def __len__(self):
-        if self.raw_content:
-            return len(self.raw_content)
-        return self.__file_len
+        return self.__len
+
+    @property
+    def content(self) -> Union[bytes, Path]:
+        return self.__content
+
+    @content.setter
+    def content(self, value: Union[bytes, Path]):
+        if isinstance(value, bytes):
+            self.__type = "bytes"
+            self.__len = len(value)
+        elif isinstance(value, Path):
+            self.__type = "file"
+            self.__len = value.stat().st_size
+        else:
+            raise ValueError("Unknown content type")
+        self.__content = value
+
+    @property
+    def type(self) -> Literal["file", "bytes"]:
+        return self.__type # type: ignore
 
     def send_to(self, conn: socket.socket):
-        if self.raw_content:
-            conn.send(self.raw_content)
-        elif self.__file_path:
-            with open(self.__file_path, "rb") as f:
+        if self.type == "bytes":
+            self.content = cast(bytes, self.content)
+            conn.send(self.content)
+        elif self.type == "file":
+            self.content = cast(Path, self.content)
+            with self.content.open("rb") as f:
                 conn.sendfile(f)
-
-    @staticmethod
-    def from_file(file_path: str):
-        return ResponseBody(file_path=file_path)
-
-    @staticmethod
-    def from_bytes(raw_content: bytes):
-        return ResponseBody(raw_content=raw_content)
 
 
 HeadersType = dict[str, str]
@@ -131,7 +136,7 @@ class HTTPResponseFactory:
         return HTTPResponse(
             status_code,
             headers,
-            ResponseBody.from_bytes(json.dumps(value).encode(encoding)),
+            ResponseBody(json.dumps(value).encode(encoding)),
         )
 
     def html(
@@ -151,7 +156,7 @@ class HTTPResponseFactory:
         return HTTPResponse(
             status_code,
             headers,
-            ResponseBody.from_bytes(value.encode(encoding)),
+            ResponseBody(value.encode(encoding)),
         )
 
     def status(
@@ -172,7 +177,7 @@ class HTTPResponseFactory:
             return HTTPResponse(
                 status_code,
                 headers | {"Content-Type": f"text/plain; charset={encoding}"},
-                ResponseBody.from_bytes(STATUS_CODES[status_code].encode(encoding)),
+                ResponseBody(STATUS_CODES[status_code].encode(encoding)),
             )
 
         # Status code is not allowed to have a body or is unknown

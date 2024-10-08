@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Callable
 from ..http.request import HTTPRequest
 from ..common import RequestHandler
@@ -42,12 +43,14 @@ class CompressMiddleware(Middleware):
         self,
         next: RequestHandler,
         compression_preferences: list[str] = ["br", "zstd", "gzip", "x-gzip" "deflate"],
-        compression_threshold: int = 50,
+        min_response_size: int = 50,  # 50 bytes
+        max_response_size: int = 10485760,  # 10 MiB
     ):
+        super().__init__(next)
         LOG.info(f"Enabled { ', '.join(ENCODINGS.keys())}")
         self.__compression_preferences = compression_preferences
-        self.__compression_threshold = compression_threshold
-        super().__init__(next)
+        self.__min_response_size = min_response_size
+        self.__max_response_size = max_response_size
 
     def __get_best_encoding(self, request: HTTPRequest):
         mutual_encodings = []
@@ -66,16 +69,22 @@ class CompressMiddleware(Middleware):
     def __call__(self, requester: TCPAddress, request: HTTPRequest):
         resp = self.next(requester, request)
 
-        # Check if the response is compressible, file responses will not be compressed
-        if (
-            not resp.body
-            or not resp.body.raw_content
-            or len(resp.body.raw_content) < self.__compression_threshold
-        ):
+        # Return if response has no body
+        if not resp.body:
+            return resp
+
+        # Return if response size is below min or above max threshold for compression
+        if not (self.__min_response_size <= len(resp.body) <= self.__max_response_size):
             return resp
 
         if encoding := self.__get_best_encoding(request):
-            resp.body.raw_content = ENCODINGS[encoding](resp.body.raw_content)
             resp.headers["Content-Encoding"] = encoding
+            if resp.body.type == "bytes":
+                resp.body.content = ENCODINGS[encoding](resp.body.content)
+            elif resp.body.type == "file":
+                with resp.body.content.open("rb") as f:  # type: ignore
+                    resp.body.content = ENCODINGS[encoding](f.read())
+            else:
+                raise RuntimeError("Unsupported response content type")
 
         return resp

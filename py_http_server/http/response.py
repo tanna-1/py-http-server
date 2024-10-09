@@ -1,48 +1,8 @@
-from ..http.constants import STATUS_CODES
-from typing import Any, Optional, Union, Literal, cast
-from pathlib import Path
+from .constants import STATUS_CODES, HeadersType
+from .response_body import ResponseBody
+from typing import Any, Optional
 import socket
 import json
-
-
-class ResponseBody:
-    def __init__(self, content: Union[bytes, Path]):
-        self.content = content
-
-    def __len__(self):
-        return self.__len
-
-    @property
-    def content(self) -> Union[bytes, Path]:
-        return self.__content
-
-    @content.setter
-    def content(self, value: Union[bytes, Path]):
-        if isinstance(value, bytes):
-            self.__type = "bytes"
-            self.__len = len(value)
-        elif isinstance(value, Path):
-            self.__type = "file"
-            self.__len = value.stat().st_size
-        else:
-            raise ValueError("Unknown content type")
-        self.__content = value
-
-    @property
-    def type(self) -> Literal["file", "bytes"]:
-        return self.__type # type: ignore
-
-    def send_to(self, conn: socket.socket):
-        if self.type == "bytes":
-            self.content = cast(bytes, self.content)
-            conn.send(self.content)
-        elif self.type == "file":
-            self.content = cast(Path, self.content)
-            with self.content.open("rb") as f:
-                conn.sendfile(f)
-
-
-HeadersType = dict[str, str]
 
 
 class HTTPResponse:
@@ -90,7 +50,7 @@ class HTTPResponse:
 
     def send_to(self, conn: socket.socket, http_version: str):
         if self.body:
-            self.__headers["Content-Length"] = str(len(self.body))
+            self.__headers |= self.body.headers
         else:
             self.__headers["Content-Length"] = "0"
 
@@ -136,7 +96,7 @@ class HTTPResponseFactory:
         return HTTPResponse(
             status_code,
             headers,
-            ResponseBody(json.dumps(value).encode(encoding)),
+            ResponseBody.from_bytes(json.dumps(value).encode(encoding)),
         )
 
     def html(
@@ -156,7 +116,7 @@ class HTTPResponseFactory:
         return HTTPResponse(
             status_code,
             headers,
-            ResponseBody(value.encode(encoding)),
+            ResponseBody.from_bytes(value.encode(encoding)),
         )
 
     def status(
@@ -177,7 +137,7 @@ class HTTPResponseFactory:
             return HTTPResponse(
                 status_code,
                 headers | {"Content-Type": f"text/plain; charset={encoding}"},
-                ResponseBody(STATUS_CODES[status_code].encode(encoding)),
+                ResponseBody.from_bytes(STATUS_CODES[status_code].encode(encoding)),
             )
 
         # Status code is not allowed to have a body or is unknown

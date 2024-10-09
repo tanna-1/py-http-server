@@ -1,8 +1,6 @@
-from ..http.constants import HTTP_VERSIONS
+from .constants import HTTP_VERSIONS, HeadersType
 import socket
 import urllib.parse
-
-HeadersType = dict[str, str]
 
 
 class HTTPRequest:

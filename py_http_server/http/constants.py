@@ -1,3 +1,5 @@
+HeadersType = dict[str, str]
+
 HEADER_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
 
 HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]

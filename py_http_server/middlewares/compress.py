@@ -1,5 +1,7 @@
 from pathlib import Path
 from typing import Any, Callable
+
+from py_http_server.http.response_body import BytesBody, FileBody, ResponseBody
 from ..http.request import HTTPRequest
 from ..common import RequestHandler
 from ..networking.address import TCPAddress
@@ -79,11 +81,14 @@ class CompressMiddleware(Middleware):
 
         if encoding := self.__get_best_encoding(request):
             resp.headers["Content-Encoding"] = encoding
-            if resp.body.type == "bytes":
+
+            if isinstance(resp.body, BytesBody):
+                # Directly compress bytes bodies
                 resp.body.content = ENCODINGS[encoding](resp.body.content)
-            elif resp.body.type == "file":
-                with resp.body.content.open("rb") as f:  # type: ignore
-                    resp.body.content = ENCODINGS[encoding](f.read())
+            elif isinstance(resp.body, FileBody):
+                # Convert file bodies to bytes bodies for compression
+                with resp.body.file_path.open("rb") as f:
+                    resp.body = ResponseBody.from_bytes(ENCODINGS[encoding](f.read()))
             else:
                 raise RuntimeError("Unsupported response content type")
 

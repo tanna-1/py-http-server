@@ -108,7 +108,7 @@ class FileRouter(Router):
                     return self.http.status(304, headers)
 
         headers["Content-Type"] = self.__get_content_type(path)
-        return HTTPResponse(200, headers, ResponseBody(path))
+        return HTTPResponse(200, headers, ResponseBody.from_file(path))
 
     def __serve_folder(self, requester: TCPAddress, path: Path):
         # Turns any path into an absolute web path (relative to document root)

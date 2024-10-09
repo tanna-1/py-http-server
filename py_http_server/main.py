@@ -20,7 +20,7 @@ def app_main(
         if https_listeners and (not https_key_file or not https_cert_file):
             raise ValueError("Cannot create HTTP listeners without key and cert files")
 
-        listeners = []  # type: list[ListenerThread]
+        listeners: list[ListenerThread] = []
 
         # Create HTTP listeners
         for address in http_listeners:

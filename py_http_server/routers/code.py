@@ -29,11 +29,13 @@ class CodeRouter(Router):
         )
 
         # Discover @route methods
-        self.__handlers = (
-            {}
-        )  # type: dict[str, Callable[[TCPAddress, HTTPRequest], HTTPResponse]]
+        self.__handlers: dict[
+            str, Callable[[TCPAddress, HTTPRequest], HTTPResponse]
+        ] = {}
         for member in dir(self):
-            value = getattr(self, member)
+            value: Callable[[TCPAddress, HTTPRequest], HTTPResponse] = getattr(
+                self, member
+            )
             if callable(value) and "_route" in dir(value):
                 path = value._route["path"]
                 LOG.debug(f'Discovered handler "{value.__qualname__}" for "{path}"')

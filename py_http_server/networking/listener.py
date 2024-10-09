@@ -21,7 +21,7 @@ class ListenerThread(threading.Thread):
         """
         super().__init__()
         self.__disposed = False
-        self.__connections = []  # type: list[ConnectionThread]
+        self.__connections: list[ConnectionThread] = []
         self.__socket = socket
         self.__bind_address = bind_address
         self.__handler = handler

@@ -12,7 +12,6 @@ import urllib.parse
 
 
 LOG = log.getLogger("routers.file")
-CHUNK_THRESHOLD = 1048576  # 1MiB
 
 
 class FileRouter(Router):
@@ -125,7 +124,7 @@ class FileRouter(Router):
 
         # Prettify the path :)
         title = f"/{title}" if title != "." else "/"
-        content = f"<!DOCTYPE html><html><head><title>{title}</title>"
+        content = f"<!DOCTYPE html><html><head><title>Index of {title}</title>"
         content += "<style>body{font-family:sans-serif;margin: 2rem auto;max-width: 80vw;}</style>"
         content += f"</head><body><h3>{title}</h3><ul>"
 

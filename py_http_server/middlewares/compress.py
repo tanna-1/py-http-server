@@ -81,7 +81,6 @@ class CompressMiddleware(Middleware):
 
         if encoding := self.__get_best_encoding(request):
             resp.headers["Content-Encoding"] = encoding
-
             if isinstance(resp.body, BytesBody):
                 # Directly compress bytes bodies
                 resp.body.content = ENCODINGS[encoding](resp.body.content)
@@ -90,6 +89,7 @@ class CompressMiddleware(Middleware):
                 with resp.body.file_path.open("rb") as f:
                     resp.body = ResponseBody.from_bytes(ENCODINGS[encoding](f.read()))
             else:
-                raise RuntimeError("Unsupported response content type")
+                # No encoding was applied because the body type is unsupported
+                del resp.headers["Content-Encoding"]
 
         return resp

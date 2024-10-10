@@ -3,3 +3,4 @@ from .base import *
 from .basic_auth import *
 from .compress import *
 from .default import *
+from .virtual_host import *

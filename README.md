@@ -33,6 +33,9 @@ app_main(
 3. **DefaultMiddleware**  
    Adds default headers `Server` and `Date` to all responses.
 
+4. **VirtualHostMiddleware**  
+   Forwards the request to different handler chains based on the `Host` header's value.
+
 ### Routers
 > [!NOTE]
 > `CodeRouter` is a base class and cannot be used on its own.

@@ -71,6 +71,13 @@ class ListenerThread(threading.Thread):
             self.__disposed = True
             for connection in self.__connections:
                 connection.dispose()
+
+            # Try to shutdown the socket, this is required on Linux
+            try:
+                self.__socket.shutdown(socket.SHUT_RD)
+            except:
+                pass
+            
             self.__socket.close()
             LOG.info(f"({self.__bind_address}) Closed listener.")
 

@@ -70,5 +70,12 @@ class ConnectionThread(threading.Thread):
     def dispose(self):
         if not self.__disposed:
             self.__disposed = True
+            
+            # Try to shutdown the socket, this is required on Linux
+            try:
+                self.__conn.shutdown(socket.SHUT_RD)
+            except:
+                pass
+            
             self.__conn.close()
             LOG.debug(f"({self.__requester}) Closed connection.")

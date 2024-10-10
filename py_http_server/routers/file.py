@@ -10,7 +10,12 @@ from datetime import datetime, timezone
 import html
 import mimetypes
 import urllib.parse
+import pkg_resources
 
+with open(
+    pkg_resources.resource_filename("py_http_server", "data/index.html"), "r"
+) as f:
+    INDEX_TEMPLATE = f.read()
 
 LOG = log.getLogger("routers.file")
 
@@ -103,33 +108,61 @@ class FileRouter(Router):
 
     def __serve_folder(self, requester: TCPAddress, path: Path):
         # Turns any path into an absolute web path (relative to document root)
-        def make_link(p: Path) -> str:
-            rel_p = p.relative_to(self.__document_root)
-            return urllib.parse.quote("/" + rel_p.as_posix())
-
+        make_link = lambda p: urllib.parse.quote(
+            "/" + p.relative_to(self.__document_root).as_posix()
+        )
         # Escapes text for embedding within HTML
-        def make_text(val):
-            return html.escape(str(val))
+        make_text = lambda x: html.escape(str(x))
 
-        # Display path relative to document root
-        title = make_text(path.relative_to(self.__document_root).as_posix())
-
-        # Prettify the path :)
+        # Pretty path relative to document root
+        title = path.relative_to(self.__document_root).as_posix()
         title = f"/{title}" if title != "." else "/"
-        content = f"<!DOCTYPE html><html><head><title>Index of {title}</title>"
-        content += "<style>body{font-family:sans-serif;margin: 2rem auto;max-width: 80vw;}</style>"
-        content += f"</head><body><h3>{title}</h3><ul>"
 
-        # Display the parent path if possible
+        table_items = []
+
+        def add_table_item(link="", name="", type="", last_modified="", size=""):
+            name, type, last_modified, size = (
+                make_text(name),
+                make_text(type),
+                make_text(last_modified),
+                make_text(size),
+            )
+            table_items.append(
+                f'<tr><td><a href="{link}">{name}</a></td><td>{type}</td><td>{last_modified}</td><td>{size}</td></tr>'
+            )
+
         if path.parent != path and self.__is_path_allowed(path.parent):
-            content += f'<li><a href="{make_link(path.parent)}">..</a></li>'
+            # Display the parent path if possible
+            add_table_item(make_link(path.parent), "..", "Symlink")
 
-        # Display entries for sub paths
         for sub_path in path.iterdir():
-            content += f'<li><a href="{make_link(sub_path)}">{make_text(sub_path.name)}</a></li>'
+            stat = sub_path.stat()
+            size = ""
+            if sub_path.is_dir():
+                type = "Folder"
+            elif sub_path.is_file():
+                type = "File"
+                size = f"{stat.st_size} bytes"
+            elif sub_path.is_symlink():
+                type = "Symlink"
+            else:
+                continue
 
-        content += f"</ul><p>Generated on {datetime.now().isoformat()} for {requester}</p></body></html>"
-        return self.http.html(content)
+            last_mod = to_http_date(
+                datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
+            )
+            add_table_item(make_link(sub_path), sub_path.name, type, last_mod, size)
+
+        return self.http.html(
+            INDEX_TEMPLATE.replace("{table_items}", "".join(table_items))
+            .replace("{title}", make_text(title))
+            .replace(
+                "{footer}",
+                make_text(
+                    f"Generated on {to_http_date(datetime.now())} for {requester}"
+                ),
+            )
+        )
 
     def __call__(self, requester: TCPAddress, request: HTTPRequest):
         if request.method != "GET":

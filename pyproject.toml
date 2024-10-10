@@ -32,3 +32,6 @@ all = ["zstd>=1.5.5", "Brotli>=1.1.0"]
 
 [project.scripts]
 py_http_server = "py_http_server:main"
+
+[tool.setuptools.package-data]
+py_http_server = ["data/*"]

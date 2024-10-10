@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 class DefaultMiddleware(Middleware):
     def __init__(self, next: RequestHandler):
-        super().__init__(next)
+        self.next = next
 
     def __call__(self, requester: TCPAddress, request: HTTPRequest):
         resp = self.next(requester, request)

@@ -19,7 +19,7 @@ def route(path):
 
 class CodeRouter(Router):
     def __init__(self):
-        super().__init__(HTTPResponseFactory(NO_CACHE_HEADERS))
+        self.http = HTTPResponseFactory(NO_CACHE_HEADERS)
 
         # Discover @route methods
         self.__handlers: dict[

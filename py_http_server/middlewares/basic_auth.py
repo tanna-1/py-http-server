@@ -12,9 +12,9 @@ LOG = log.getLogger("middlewares.basic_auth")
 
 class BasicAuthMiddleware(Middleware):
     def __init__(self, next: RequestHandler, credentials: dict[str, str]):
-        super().__init__(next)
+        self.next = next
         self.__cred = credentials
-        self.__http = HTTPResponseFactory(NO_CACHE_HEADERS)
+        self.http = HTTPResponseFactory(NO_CACHE_HEADERS)
 
     def __verify_authorization(self, header_value: str):
         auth_type, _, data = header_value.partition(" ")
@@ -37,7 +37,7 @@ class BasicAuthMiddleware(Middleware):
         ):
             return self.next(requester, request)
 
-        return self.__http.status(
+        return self.http.status(
             401,
             {"WWW-Authenticate": 'Basic realm="auth", charset="UTF-8"'},
         )

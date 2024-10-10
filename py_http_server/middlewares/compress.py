@@ -45,7 +45,7 @@ class CompressMiddleware(Middleware):
         min_response_size: int = 50,  # 50 bytes
         max_response_size: int = 10485760,  # 10 MiB
     ):
-        super().__init__(next)
+        self.next = next
         LOG.info(f"Enabled { ', '.join(ENCODINGS.keys())}")
         self.__compression_preferences = compression_preferences
         self.__min_response_size = min_response_size

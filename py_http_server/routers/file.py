@@ -41,8 +41,7 @@ class FileRouter(Router):
         WARNING: Enabling symlinks may lead to unexpected results with authentication middlewares.
         E.g. "/protected_folder" vs "/folder/../protected_folder"
         """
-        super().__init__(HTTPResponseFactory(NO_CACHE_HEADERS))
-
+        self.http = HTTPResponseFactory(NO_CACHE_HEADERS)
         self.__document_root = Path(document_root).resolve()
         self.__generate_index = generate_index
         self.__enable_etag = enable_etag

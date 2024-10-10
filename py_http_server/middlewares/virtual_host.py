@@ -21,7 +21,7 @@ class VirtualHostMiddleware(Middleware):
 
         # Forward the request to default virtual host if there is one
         if None in self.next_map:
-            return self.next_map[host](requester, request)
+            return self.next_map[None](requester, request)
 
         # No match
         return self.http.status(404)

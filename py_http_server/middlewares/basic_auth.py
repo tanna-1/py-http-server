@@ -1,3 +1,4 @@
+from ..http.constants import NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..common import RequestHandler
 from ..http.response import HTTPResponseFactory
@@ -13,13 +14,7 @@ class BasicAuthMiddleware(Middleware):
     def __init__(self, next: RequestHandler, credentials: dict[str, str]):
         super().__init__(next)
         self.__cred = credentials
-        self.__http = HTTPResponseFactory(
-            {
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0",
-            }
-        )
+        self.__http = HTTPResponseFactory(NO_CACHE_HEADERS)
 
     def __verify_authorization(self, header_value: str):
         auth_type, _, data = header_value.partition(" ")

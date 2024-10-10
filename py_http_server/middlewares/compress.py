@@ -1,7 +1,4 @@
-from pathlib import Path
-from typing import Any, Callable
-
-from py_http_server.http.response_body import BytesBody, FileBody, ResponseBody
+from ..http.response_body import BytesBody, FileBody, ResponseBody
 from ..http.request import HTTPRequest
 from ..common import RequestHandler
 from ..networking.address import TCPAddress

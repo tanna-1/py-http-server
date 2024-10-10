@@ -1,5 +1,11 @@
 HeadersType = dict[str, str]
 
+NO_CACHE_HEADERS: HeadersType = {
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
 HEADER_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
 
 HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]

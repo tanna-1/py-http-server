@@ -1,4 +1,4 @@
-from py_http_server.http.constants import HEADER_DATE_FORMAT
+from .http.constants import HEADER_DATE_FORMAT
 from .networking.address import TCPAddress
 from .http.request import HTTPRequest
 from .http.response import HTTPResponse

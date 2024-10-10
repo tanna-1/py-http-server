@@ -1,3 +1,4 @@
+from ..http.constants import NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
 from ..networking.address import TCPAddress
@@ -18,15 +19,7 @@ def route(path):
 
 class CodeRouter(Router):
     def __init__(self):
-        super().__init__(
-            HTTPResponseFactory(
-                {
-                    "Cache-Control": "no-cache, no-store, must-revalidate",
-                    "Pragma": "no-cache",
-                    "Expires": "0",
-                }
-            )
-        )
+        super().__init__(HTTPResponseFactory(NO_CACHE_HEADERS))
 
         # Discover @route methods
         self.__handlers: dict[

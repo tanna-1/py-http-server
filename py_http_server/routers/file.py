@@ -1,3 +1,4 @@
+from ..http.constants import NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
 from ..networking.address import TCPAddress
@@ -35,16 +36,7 @@ class FileRouter(Router):
         WARNING: Enabling symlinks may lead to unexpected results with authentication middlewares.
         E.g. "/protected_folder" vs "/folder/../protected_folder"
         """
-
-        super().__init__(
-            HTTPResponseFactory(
-                {
-                    "Cache-Control": "no-cache, must-revalidate",
-                    "Pragma": "no-cache",
-                    "Expires": "0",
-                }
-            )
-        )
+        super().__init__(HTTPResponseFactory(NO_CACHE_HEADERS))
 
         self.__document_root = Path(document_root).resolve()
         self.__generate_index = generate_index

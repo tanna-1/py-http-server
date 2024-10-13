@@ -36,7 +36,7 @@ class CodeRouter(Router):
 
     def __call__(self, requester: TCPAddress, request: HTTPRequest):
         if not request.path in self.__handlers:
-            return self.http.status(404)
+            return self.default_route(requester, request)
 
         handler = self.__handlers[request.path]
         try:
@@ -49,3 +49,6 @@ class CodeRouter(Router):
                 f'Exception in handler for path "{request.path}"', exc_info=exc
             )
             return self.http.status(500)
+
+    def default_route(self, requester: TCPAddress, request: HTTPRequest):
+        return self.http.status(404)

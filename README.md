@@ -41,7 +41,7 @@ app_main(
 > `CodeRouter` is a base class and cannot be used on its own.
 
 1. **CodeRouter**  
-   Auto-discovers route handlers using a `@route(path)` decorator for mapping paths to handler functions.  
+   Auto-discovers route handlers using a `@route(path)` decorator for mapping paths to handler functions. Calls `default_route` for any non-handled route.
 
 2. **DebugRouter**  
    Provides predefined routes for debugging:

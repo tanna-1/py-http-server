@@ -40,11 +40,22 @@ class ListenerThread(threading.Thread):
                 conn, address = self.__socket.accept()
                 parsed_address = TCPAddress(address[0], address[1])
 
-                # Add new connection
-                self.__add_connection(conn, parsed_address)
-                LOG.debug(
-                    f"({self.__bind_address}) Client connected from {parsed_address}"
-                )
+                # Wrap connection in ConnectionSocket
+                conn = ConnectionSocket(conn)
+
+                # Attempt to add connection
+                try:
+                    self.__add_connection(conn, parsed_address)
+                    LOG.debug(
+                        f"({self.__bind_address}) Client connected from {parsed_address}"
+                    )
+                except Exception as exc:
+                    conn.close()
+                    LOG.exception(
+                        f"({self.__bind_address}) Dropped connection from {parsed_address} due to error",
+                        exc_info=exc,
+                    )
+
         except Exception as exc:
             # Suppress error messages on dispose() call
             if not self.__disposed:
@@ -54,10 +65,10 @@ class ListenerThread(threading.Thread):
 
         self.dispose()
 
-    def __add_connection(self, conn: socket.socket, parsed_address: TCPAddress):
+    def __add_connection(self, conn: ConnectionSocket, parsed_address: TCPAddress):
         # Connection has to be wrapped with ConnectionSocket
         self.__connections.append(
-            ConnectionThread(ConnectionSocket(conn), parsed_address, self.__handler)
+            ConnectionThread(conn, parsed_address, self.__handler)
         )
         self.__connections[-1].start()
 

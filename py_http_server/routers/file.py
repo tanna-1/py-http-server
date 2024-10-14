@@ -165,7 +165,8 @@ class FileRouter(Router):
 
     def __call__(self, requester: TCPAddress, request: HTTPRequest):
         if request.method != "GET":
-            return self.http.status(400)
+            # Method not allowed
+            return self.http.status(405)
 
         # Append the path to document root
         # https://bugs.python.org/issue44452

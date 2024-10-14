@@ -13,36 +13,60 @@ class HTTPRequest:
         version: str,
         body: bytes,
     ):
-        self.__method = method
-        self.__path = path
-        self.__query = query
-        self.__version = version
-        self.__headers = headers
-        self.__body = body
+        self.method = method
+        self.path = path
+        self.query = query
+        self.version = version
+        self.headers = headers
+        self.body = body
 
     @property
     def method(self):
         return self.__method
 
+    @method.setter
+    def method(self, value: str):
+        self.__method = value
+
     @property
     def path(self):
         return self.__path
+
+    @path.setter
+    def path(self, value: str):
+        self.__path = value
 
     @property
     def query(self):
         return self.__query
 
+    @query.setter
+    def query(self, value: str):
+        self.__query = value
+
     @property
     def version(self):
-        return self.__version.upper()
+        return self.__version
+
+    @version.setter
+    def version(self, value: str):
+        self.__version = value.upper()
 
     @property
     def headers(self):
         return self.__headers
 
+    @headers.setter
+    def headers(self, value: HeadersType):
+        self.__headers = value
+
     @property
     def body(self):
         return self.__body
+
+    @body.setter
+    def body(self, value: bytes):
+        self.__body = value
 
     def __str__(self):
         return f"{self.__method} {self.__path}{self.__query} {self.__version}"

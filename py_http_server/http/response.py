@@ -40,14 +40,6 @@ class HTTPResponse:
     def body(self, value: Optional[ResponseBody]):
         self.__body = value
 
-    @property
-    def body_file(self):
-        return self.__body_file
-
-    @body_file.setter
-    def body_file(self, value: Optional[str]):
-        self.__body_file = value
-
     def send_to(self, conn: socket.socket, http_version: str):
         if self.body:
             self.__headers |= self.body.headers

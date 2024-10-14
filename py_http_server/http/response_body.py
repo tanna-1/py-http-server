@@ -116,3 +116,16 @@ class BytesBody(ResponseBody):
 
     def send_to(self, conn: socket.socket):
         conn.send(self.content)
+
+
+# EmptyBody has no Content-Length header, to be used for HEAD responses
+class EmptyBody(ResponseBody):
+    def __len__(self):
+        return 0
+
+    @property
+    def headers(self) -> HeadersType:
+        return {}
+
+    def send_to(self, conn: socket.socket):
+        pass

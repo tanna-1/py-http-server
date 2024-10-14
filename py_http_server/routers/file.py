@@ -10,13 +10,12 @@ from datetime import datetime, timezone
 import html
 import mimetypes
 import urllib.parse
-import pkg_resources
+import pkgutil
 
-with open(
-    pkg_resources.resource_filename("py_http_server", "data/index.html"), "r"
-) as f:
-    INDEX_TEMPLATE = f.read()
-
+template_data = pkgutil.get_data(__name__, "../data/index.html")
+if not template_data:
+    raise RuntimeError("Couldn't load data/index.html from package.")
+INDEX_TEMPLATE = template_data.decode("utf-8")
 LOG = log.getLogger("routers.file")
 
 

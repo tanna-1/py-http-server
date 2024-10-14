@@ -1,8 +1,8 @@
-from ..common import RequestHandler
+from ..networking.connection_socket import ConnectionSocket, GracefulDisconnectException
 from ..networking.address import TCPAddress
+from ..common import RequestHandler
 from ..http.request import HTTPRequest
 from .. import log
-import socket
 import threading
 
 LOG = log.getLogger("connection")
@@ -11,7 +11,7 @@ LOG = log.getLogger("connection")
 class ConnectionThread(threading.Thread):
     def __init__(
         self,
-        conn: socket.socket,
+        conn: ConnectionSocket,
         requester: TCPAddress,
         handler: RequestHandler,
     ):
@@ -54,6 +54,9 @@ class ConnectionThread(threading.Thread):
                 # Close the connection if necessary
                 if conn_policy == "close":
                     break
+        except GracefulDisconnectException:
+            # Graceful disconnection is not an error
+            pass
         except Exception as exc:
             # Suppress error messages on dispose() call
             if not self.__disposed:
@@ -70,12 +73,5 @@ class ConnectionThread(threading.Thread):
     def dispose(self):
         if not self.__disposed:
             self.__disposed = True
-            
-            # Try to shutdown the socket, this is required on Linux
-            try:
-                self.__conn.shutdown(socket.SHUT_RD)
-            except:
-                pass
-            
             self.__conn.close()
             LOG.debug(f"({self.__requester}) Closed connection.")

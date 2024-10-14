@@ -1,6 +1,7 @@
 from ..common import RequestHandler
 from ..networking.address import TCPAddress
 from ..networking.connection import ConnectionThread
+from ..networking.connection_socket import ConnectionSocket
 from .. import log
 import socket
 import threading
@@ -54,8 +55,9 @@ class ListenerThread(threading.Thread):
         self.dispose()
 
     def __add_connection(self, conn: socket.socket, parsed_address: TCPAddress):
+        # Connection has to be wrapped with ConnectionSocket
         self.__connections.append(
-            ConnectionThread(conn, parsed_address, self.__handler)
+            ConnectionThread(ConnectionSocket(conn), parsed_address, self.__handler)
         )
         self.__connections[-1].start()
 
@@ -77,7 +79,7 @@ class ListenerThread(threading.Thread):
                 self.__socket.shutdown(socket.SHUT_RD)
             except:
                 pass
-            
+
             self.__socket.close()
             LOG.info(f"({self.__bind_address}) Closed listener.")
 

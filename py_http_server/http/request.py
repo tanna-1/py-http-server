@@ -1,5 +1,5 @@
+from ..networking.connection_socket import ConnectionSocket
 from .constants import HTTP_VERSIONS, HeadersType
-import socket
 import urllib.parse
 
 
@@ -73,7 +73,7 @@ class HTTPRequest:
 
     @staticmethod
     def receive_from(
-        conn: socket.socket,
+        conn: ConnectionSocket,
         max_content_length: int = 10_000_000,
         max_header_size: int = 32768,
         recv_buffer_size: int = 32768,

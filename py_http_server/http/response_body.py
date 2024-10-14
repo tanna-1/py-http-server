@@ -2,7 +2,7 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 from io import IOBase
 from .constants import HeadersType
-import socket
+from ..networking.connection_socket import ConnectionSocket
 
 
 class ResponseBody(ABC):
@@ -17,7 +17,7 @@ class ResponseBody(ABC):
     def headers(self) -> HeadersType: ...
 
     @abstractmethod
-    def send_to(self, conn: socket.socket) -> None: ...
+    def send_to(self, conn: ConnectionSocket) -> None: ...
 
     @staticmethod
     def from_file(file_path: Path):
@@ -61,7 +61,7 @@ class StreamingBody(ResponseBody):
     def __make_chunk(self, val: bytes) -> bytes:
         return self.__get_chunk_size(val) + val + b"\r\n"
 
-    def send_to(self, conn: socket.socket):
+    def send_to(self, conn: ConnectionSocket):
         while True:
             chunk = self.__stream.read(self.__stream_chunk_size)
             if not chunk:
@@ -90,7 +90,7 @@ class FileBody(ResponseBody):
     def headers(self) -> HeadersType:
         return {"Content-Length": str(len(self))}
 
-    def send_to(self, conn: socket.socket):
+    def send_to(self, conn: ConnectionSocket):
         with self.__file_path.open("rb") as f:
             conn.sendfile(f)
 
@@ -114,7 +114,7 @@ class BytesBody(ResponseBody):
     def headers(self) -> HeadersType:
         return {"Content-Length": str(len(self))}
 
-    def send_to(self, conn: socket.socket):
+    def send_to(self, conn: ConnectionSocket):
         conn.send(self.content)
 
 
@@ -127,5 +127,5 @@ class EmptyBody(ResponseBody):
     def headers(self) -> HeadersType:
         return {}
 
-    def send_to(self, conn: socket.socket):
+    def send_to(self, conn: ConnectionSocket):
         pass

@@ -1,7 +1,7 @@
+from ..networking.connection_socket import ConnectionSocket
 from .constants import STATUS_CODES, HeadersType
 from .response_body import ResponseBody
 from typing import Any, Optional
-import socket
 import json
 
 
@@ -40,7 +40,7 @@ class HTTPResponse:
     def body(self, value: Optional[ResponseBody]):
         self.__body = value
 
-    def send_to(self, conn: socket.socket, http_version: str):
+    def send_to(self, conn: ConnectionSocket, http_version: str):
         if self.body:
             self.__headers |= self.body.headers
         else:

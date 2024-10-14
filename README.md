@@ -31,7 +31,7 @@ app_main(
    Compresses responses based on client's `Accept-Encoding` value, supports `gzip`, `brotli`, `zstd` and `deflate`.
 
 3. **DefaultMiddleware**  
-   Adds default headers `Server` and `Date` to all responses.
+   Adds default headers `Server` and `Date` to all responses and adds `HEAD` request support to all endpoints by converting them to `GET` requests.
 
 4. **VirtualHostMiddleware**  
    Forwards the request to different handler chains based on the `Host` header's value.

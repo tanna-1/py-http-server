@@ -22,7 +22,7 @@ class HTTPRequest:
 
     @property
     def method(self):
-        return self.__method.upper()
+        return self.__method
 
     @property
     def path(self):

@@ -24,7 +24,9 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-all = ["zstd>=1.5.5", "Brotli>=1.1.0"]
+compress = ["zstd>=1.5.5", "Brotli>=1.1.0"]
+minimize = ["minify-html>=0.15.0"]
+all = ["py_http_server[compress,minimize]"]
 
 [project.urls]
 "Homepage" = "https://github.com/tanna-1/py-http-server"

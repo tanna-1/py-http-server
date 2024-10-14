@@ -36,6 +36,9 @@ app_main(
 4. **VirtualHostMiddleware**  
    Forwards the request to different handler chains based on the `Host` header's value.
 
+5. **MinimizeMiddleware**
+   Minimizes HTML, CSS, JS and JSON responses. Not recommended for production use.
+
 ### Routers
 > [!NOTE]
 > `CodeRouter` is a base class and cannot be used on its own.

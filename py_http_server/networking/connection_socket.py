@@ -37,6 +37,7 @@ class ConnectionSocket:
             sock.setsockopt(socket.IPPROTO_TCP, _SOCKET_NOPUSH_OPTION, enable_nopush)
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, enable_nodelay)
 
+        self.__enable_nodelay = enable_nodelay
         self.__socket = sock
         self.__enable_sendfile = enable_sendfile
 
@@ -54,6 +55,12 @@ class ConnectionSocket:
             return self.__socket.sendfile(file, offset, count)
         else:
             return self.__socket._sendfile_use_send(file, offset, count)
+        
+    def flush(self):
+        # Force flush of the socket. Only tested on Linux.
+        if not self.__enable_nodelay:
+            self.__socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, True)
+            self.__socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, False)
 
     def close(self):
         # Try to shutdown the socket, this is required on Linux

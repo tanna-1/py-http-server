@@ -62,6 +62,9 @@ class HTTPResponse:
 
         if self.body:
             self.body.send_to(conn)
+            
+        # Optimize time-to-response
+        conn.flush()
 
 
 class HTTPResponseFactory:

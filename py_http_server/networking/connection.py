@@ -23,11 +23,11 @@ class ConnectionThread(threading.Thread):
 
     @staticmethod
     def __get_connection_policy(req: HTTPRequest):
-        if req.version == "HTTP1.0":
+        if req.version == "HTTP/1.0":
             # "close" by default unless "keep-alive" specified
             if req.headers.get("connection", None) != "keep-alive":
                 return "close"
-        elif req.version == "HTTP1.1":
+        elif req.version == "HTTP/1.1":
             # "close" only if "close" specified
             if req.headers.get("connection", None) == "close":
                 return "close"

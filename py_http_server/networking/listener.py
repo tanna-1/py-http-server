@@ -35,9 +35,14 @@ class ListenerThread(threading.Thread):
             while True:
                 # Clean disposed connections
                 self.__clean_old_connections()
-
+                
                 # Wait for a connection
-                conn, address = self.__socket.accept()
+                try:
+                    conn, address = self.__socket.accept()
+                except ssl.SSLError as exc:
+                    # Ignore SSLErrors during handshake as logging them will be quite noisy
+                    continue
+                
                 parsed_address = TCPAddress(address[0], address[1])
 
                 # Wrap connection in ConnectionSocket

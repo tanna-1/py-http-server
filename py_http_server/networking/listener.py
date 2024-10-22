@@ -132,7 +132,9 @@ class ListenerThread(threading.Thread):
             family=sock_family,
         )
 
-        context = ssl.create_default_context()
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.minimum_version = ssl.TLSVersion.TLSv1
+        context.maximum_version = ssl.TLSVersion.MAXIMUM_SUPPORTED
         context.load_cert_chain(certfile=certfile, keyfile=keyfile)
 
         sock = context.wrap_socket(sock, server_side=True)

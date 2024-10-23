@@ -7,6 +7,7 @@ class HTTPRequest:
     def __init__(
         self,
         method: str,
+        raw_path: str,
         path: str,
         query: str,
         headers: HeadersType,
@@ -14,6 +15,7 @@ class HTTPRequest:
         body: bytes,
     ):
         self.method = method
+        self.raw_path = raw_path
         self.path = path
         self.query = query
         self.version = version
@@ -27,6 +29,14 @@ class HTTPRequest:
     @method.setter
     def method(self, value: str):
         self.__method = value
+
+    @property
+    def raw_path(self):
+        return self.__raw_path
+
+    @raw_path.setter
+    def raw_path(self, value: str):
+        self.__raw_path = value
 
     @property
     def path(self):
@@ -68,8 +78,11 @@ class HTTPRequest:
     def body(self, value: bytes):
         self.__body = value
 
+    def to_url(self, host: str, schema: str):
+        return f"{schema}://{host}{self.__raw_path}{self.__query}"
+
     def __str__(self):
-        return f"{self.__method} {self.__path}{self.__query} {self.__version}"
+        return f"{self.__method} {self.__raw_path}{self.__query} {self.__version}"
 
     @staticmethod
     def receive_from(
@@ -87,7 +100,7 @@ class HTTPRequest:
 
         try:
             header_lines = headers_raw.decode(encoding="ascii").split("\r\n")
-            method, path, version = header_lines[0].split(" ")
+            method, raw_path, version = header_lines[0].split(" ")
 
             if version not in HTTP_VERSIONS:
                 raise ValueError("Invalid HTTP version")
@@ -113,10 +126,10 @@ class HTTPRequest:
 
         # Parse percent encoding
         # Warning: This step is necessary to prevent unexpected vulnerabilities
-        path = urllib.parse.unquote(path)
+        path = urllib.parse.unquote(raw_path)
 
         # Split the path to actual path and query, keeps the question mark
         path, qm, query = path.partition("?")
         query = qm + query
 
-        return HTTPRequest(method, path, query, headers, version, body)
+        return HTTPRequest(method, raw_path, path, query, headers, version, body)

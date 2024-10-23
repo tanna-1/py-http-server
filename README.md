@@ -39,6 +39,9 @@ app_main(
 5. **MinimizeMiddleware**
    Minimizes HTML, CSS, JS and JSON responses. Not recommended for production use.
 
+5. **EnforceHTTPSMiddleware**
+   Redirects all HTTP requests to HTTPS URLs, optionally adds HSTS header to all responses.
+
 ### Routers
 > [!NOTE]
 > `CodeRouter` is a base class and cannot be used on its own.

@@ -2,7 +2,7 @@ from ..http.constants import NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..common import RequestHandler
 from ..http.response import HTTPResponseFactory
-from ..networking.address import TCPAddress
+from ..networking import ConnectionInfo
 from ..middlewares.base import Middleware
 from .. import log
 import base64
@@ -31,11 +31,11 @@ class BasicAuthMiddleware(Middleware):
         LOG.warning(f"Basic authentication incorrect credentials.")
         return False
 
-    def __call__(self, requester: TCPAddress, request: HTTPRequest):
+    def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
         if "authorization" in request.headers and self.__verify_authorization(
             request.headers["authorization"]
         ):
-            return self.next(requester, request)
+            return self.next(conn_info, request)
 
         return self.http.status(
             401,

@@ -1,7 +1,7 @@
-from py_http_server.http.response_body import EmptyBody
+from ..http.response_body import EmptyBody
+from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..common import RequestHandler, to_http_date
-from ..networking.address import TCPAddress
 from ..middlewares.base import Middleware
 from datetime import datetime, timezone
 
@@ -10,13 +10,13 @@ class DefaultMiddleware(Middleware):
     def __init__(self, next: RequestHandler):
         self.next = next
 
-    def __call__(self, requester: TCPAddress, request: HTTPRequest):
+    def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
         # Convert HEAD requests to GET
         original_method = request.method
         if original_method == "HEAD":
             request.method = "GET"
 
-        resp = self.next(requester, request)
+        resp = self.next(conn_info, request)
         resp.headers = {
             "Server": "Tan's HTTP Server",
             "Date": to_http_date(datetime.now(timezone.utc)),

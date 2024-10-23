@@ -1,7 +1,7 @@
+from ..networking import ConnectionInfo
 from ..http.response_body import BytesBody, FileBody, ResponseBody
 from ..http.request import HTTPRequest
 from ..common import RequestHandler
-from ..networking.address import TCPAddress
 from ..middlewares.base import Middleware
 from .. import log
 import json
@@ -24,8 +24,8 @@ class MinimizeMiddleware(Middleware):
         self.next = next
         LOG.info(f"Enabled { ', '.join(MINIMIZERS.keys())}")
 
-    def __call__(self, requester: TCPAddress, request: HTTPRequest):
-        resp = self.next(requester, request)
+    def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
+        resp = self.next(conn_info, request)
 
         # Return if response has no body
         if not resp.body:

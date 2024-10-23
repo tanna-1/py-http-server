@@ -1,7 +1,7 @@
+from ..networking import ConnectionInfo
 from ..http.constants import NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
-from ..networking.address import TCPAddress
 from ..routers.base import Router
 from ..common import StrPath, file_etag, from_http_date, to_http_date
 from .. import log
@@ -104,7 +104,7 @@ class FileRouter(Router):
         headers["Content-Type"] = self.__get_content_type(path)
         return HTTPResponse(200, headers, ResponseBody.from_file(path))
 
-    def __serve_folder(self, requester: TCPAddress, path: Path):
+    def __serve_folder(self, conn_info: ConnectionInfo, path: Path):
         # Turns any path into an absolute web path (relative to document root)
         make_link = lambda p: urllib.parse.quote(
             "/" + p.relative_to(self.__document_root).as_posix()
@@ -157,12 +157,12 @@ class FileRouter(Router):
             .replace(
                 "{footer}",
                 make_text(
-                    f"Generated on {to_http_date(datetime.now())} for {requester}"
+                    f"Generated on {to_http_date(datetime.now())} for {conn_info.remote_address}"
                 ),
             )
         )
 
-    def __call__(self, requester: TCPAddress, request: HTTPRequest):
+    def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
         if request.method != "GET":
             # Method not allowed
             return self.http.status(405)
@@ -185,7 +185,7 @@ class FileRouter(Router):
                     return self.__serve_file(request, index_html)
                 elif self.__generate_index:
                     # Generate index if allowe and there is no index.html
-                    return self.__serve_folder(requester, path)
+                    return self.__serve_folder(conn_info, path)
         except Exception as exc:
             LOG.exception("Error while accesing path", exc_info=exc)
             return self.http.status(500)

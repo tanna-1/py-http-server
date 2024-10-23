@@ -1,5 +1,5 @@
+from ..networking.connection_info import ConnectionInfo
 from ..networking.connection_socket import ConnectionSocket, GracefulDisconnectException
-from ..networking.address import TCPAddress
 from ..common import RequestHandler
 from ..http.request import HTTPRequest
 from .. import log
@@ -12,12 +12,12 @@ class ConnectionThread(threading.Thread):
     def __init__(
         self,
         conn: ConnectionSocket,
-        requester: TCPAddress,
+        conn_info: ConnectionInfo,
         handler: RequestHandler,
     ):
         super().__init__()
         self.__conn = conn
-        self.__requester = requester
+        self.__inf = conn_info
         self.__handler = handler
         self.__disposed = False
 
@@ -41,10 +41,10 @@ class ConnectionThread(threading.Thread):
             while True:
                 # Read request from socket
                 req = HTTPRequest.receive_from(self.__conn)
-                LOG.info(f"({self.__requester}) {req}")
+                LOG.info(f"({self.__inf.remote_address}) {req}")
 
                 # Execute the handler chain
-                resp = self.__handler(self.__requester, req)
+                resp = self.__handler(self.__inf, req)
                 conn_policy = self.__get_connection_policy(req)
                 resp.headers["Connection"] = conn_policy
 
@@ -61,7 +61,8 @@ class ConnectionThread(threading.Thread):
             # Suppress error messages on dispose() call
             if not self.__disposed:
                 LOG.exception(
-                    f"({self.__requester}) Error in ConnectionThread", exc_info=exc
+                    f"({self.__inf.remote_address}) Error in ConnectionThread",
+                    exc_info=exc,
                 )
 
         self.dispose()
@@ -74,4 +75,4 @@ class ConnectionThread(threading.Thread):
         if not self.__disposed:
             self.__disposed = True
             self.__conn.close()
-            LOG.debug(f"({self.__requester}) Closed connection.")
+            LOG.debug(f"({self.__inf.remote_address}) Closed connection.")

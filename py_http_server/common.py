@@ -1,5 +1,5 @@
+from .networking import ConnectionInfo
 from .http.constants import HEADER_DATE_FORMAT
-from .networking.address import TCPAddress
 from .http.request import HTTPRequest
 from .http.response import HTTPResponse
 from datetime import datetime, timezone
@@ -15,7 +15,7 @@ StrPath = str
 class RequestHandler(ABC):
     @abstractmethod
     def __call__(
-        self, requester: TCPAddress, request: "HTTPRequest"
+        self, conn_info: ConnectionInfo, request: "HTTPRequest"
     ) -> HTTPResponse: ...
 
 

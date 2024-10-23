@@ -1,7 +1,7 @@
+from ..networking import ConnectionInfo
 from ..http.constants import NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
-from ..networking.address import TCPAddress
 from ..routers.base import Router
 from .. import log
 from typing import Callable
@@ -23,10 +23,10 @@ class CodeRouter(Router):
 
         # Discover @route methods
         self.__handlers: dict[
-            str, Callable[[TCPAddress, HTTPRequest], HTTPResponse]
+            str, Callable[[ConnectionInfo, HTTPRequest], HTTPResponse]
         ] = {}
         for member in dir(self):
-            value: Callable[[TCPAddress, HTTPRequest], HTTPResponse] = getattr(
+            value: Callable[[ConnectionInfo, HTTPRequest], HTTPResponse] = getattr(
                 self, member
             )
             if callable(value) and "_route" in dir(value):
@@ -34,21 +34,21 @@ class CodeRouter(Router):
                 LOG.debug(f'Discovered handler "{value.__qualname__}" for "{path}"')
                 self.__handlers[path] = value
 
-    def __call__(self, requester: TCPAddress, request: HTTPRequest):
+    def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
         if not request.path in self.__handlers:
-            return self.default_route(requester, request)
+            return self.default_route(conn_info, request)
 
         handler = self.__handlers[request.path]
         try:
             LOG.debug(
                 f'Calling handler "{handler.__qualname__}" for path "{request.path}"'
             )
-            return handler(requester, request)
+            return handler(conn_info, request)
         except Exception as exc:
             LOG.exception(
                 f'Exception in handler for path "{request.path}"', exc_info=exc
             )
             return self.http.status(500)
 
-    def default_route(self, requester: TCPAddress, request: HTTPRequest):
+    def default_route(self, conn_info: ConnectionInfo, request: HTTPRequest):
         return self.http.status(404)

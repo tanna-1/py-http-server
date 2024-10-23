@@ -1,4 +1,5 @@
 from ..common import RequestHandler
+from ..networking import ConnectionInfo
 from ..networking.address import TCPAddress
 from ..networking.connection import ConnectionThread
 from ..networking.connection_socket import ConnectionSocket
@@ -24,6 +25,7 @@ class ListenerThread(threading.Thread):
         self.__disposed = False
         self.__connections: list[ConnectionThread] = []
         self.__socket = socket
+        self.__is_secure = isinstance(socket, ssl.SSLSocket)
         self.__bind_address = bind_address
         self.__handler = handler
 
@@ -35,22 +37,25 @@ class ListenerThread(threading.Thread):
             while True:
                 # Clean disposed connections
                 self.__clean_old_connections()
-                
+
                 # Wait for a connection
                 try:
                     conn, address = self.__socket.accept()
                 except ssl.SSLError as exc:
                     # Ignore SSLErrors during handshake as logging them will be quite noisy
                     continue
-                
+
                 parsed_address = TCPAddress(address[0], address[1])
 
                 # Wrap connection in ConnectionSocket
                 conn = ConnectionSocket(conn)
+                conn_info = ConnectionInfo(
+                    parsed_address, self.__bind_address, self.__is_secure
+                )
 
                 # Attempt to add connection
                 try:
-                    self.__add_connection(conn, parsed_address)
+                    self.__add_connection(conn, conn_info)
                     LOG.debug(
                         f"({self.__bind_address}) Client connected from {parsed_address}"
                     )
@@ -70,11 +75,9 @@ class ListenerThread(threading.Thread):
 
         self.dispose()
 
-    def __add_connection(self, conn: ConnectionSocket, parsed_address: TCPAddress):
+    def __add_connection(self, conn: ConnectionSocket, conn_info: ConnectionInfo):
         # Connection has to be wrapped with ConnectionSocket
-        self.__connections.append(
-            ConnectionThread(conn, parsed_address, self.__handler)
-        )
+        self.__connections.append(ConnectionThread(conn, conn_info, self.__handler))
         self.__connections[-1].start()
 
     def __clean_old_connections(self):

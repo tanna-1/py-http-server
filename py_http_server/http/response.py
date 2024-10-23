@@ -62,7 +62,7 @@ class HTTPResponse:
 
         if self.body:
             self.body.send_to(conn)
-            
+
         # Optimize time-to-response
         conn.flush()
 
@@ -137,3 +137,12 @@ class HTTPResponseFactory:
 
         # Status code is not allowed to have a body or is unknown
         return HTTPResponse(status_code, headers)
+
+    def redirect(
+        self,
+        location: str,
+        permanent: bool = False,
+        additional_headers: HeadersType = {},
+    ) -> HTTPResponse:
+        headers = additional_headers | {"Location": location}
+        return self.status(301 if permanent else 302, headers)

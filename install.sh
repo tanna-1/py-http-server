@@ -1,23 +1,44 @@
 #!/usr/bin/env bash
 
+# Variables
+INSTALL_DIR=/etc/py_http_server
+CONFIG_PATH=/etc/py_http_server/config.py
+UPSTREAM=https://github.com/tanna-1/py-http-server.git@master
+
+set -x
+set -e
 if [ "$EUID" -ne 0 ]
     then echo "This script must be ran as root!"
     exit 1
 fi
 
-# Create http group and user
-adduser --system --no-create-home --group http
+# Check if INSTALL_DIR exists
+if [ -d "$INSTALL_DIR" ]; then
+    echo "Installation directory $INSTALL_DIR already exists. Exiting."
+    exit 1
+fi
+
+# Create http group and user if necessary
+if ! getent group http > /dev/null 2>&1; then
+    groupadd --system http
+fi
+if ! getent passwd http > /dev/null 2>&1; then
+    useradd -M -r -g http http
+fi
 
 # Create venv
-mkdir /etc/py_http_server
-cd /etc/py_http_server
-apt install python3-venv
+if command -v apt-get >/dev/null 2>&1; then
+    apt-get update && apt-get install -y python3-venv git
+else
+    echo "apt-get not found! Make sure that python3-venv and git are installed."
+fi
+mkdir "$INSTALL_DIR" && cd "$INSTALL_DIR"
 python3 -mvenv venv
 
 # Install pip and py_http_server
 venv/bin/python -mensurepip --upgrade
-venv/bin/python -mpip install setuptools
-venv/bin/python -mpip install git+https://github.com/tanna-1/py-http-server.git@master
+venv/bin/python -mpip install "setuptools"
+venv/bin/python -mpip install "git+$UPSTREAM"
 
 # Create default config
 cat << EOF > config.py
@@ -28,7 +49,7 @@ from py_http_server import app_main
 
 app_main(
     handler_chain=DefaultMiddleware(CompressMiddleware(FileRouter("/var/www/html"))),
-    http_listeners=[
+    http_listeners=[ 
         TCPAddress("127.0.0.1", 80),
         TCPAddress("::1", 80),
     ],
@@ -66,7 +87,7 @@ Wants=network.target
 Type=simple
 User=http
 Group=http
-ExecStart=/etc/py_http_server/venv/bin/python /etc/py_http_server/config.py
+ExecStart="$INSTALL_DIR/venv/bin/python" "$CONFIG_DIR"
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 Restart=on-failure
 

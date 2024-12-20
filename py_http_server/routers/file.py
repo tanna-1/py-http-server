@@ -157,7 +157,7 @@ class FileRouter(Router):
             .replace(
                 "{footer}",
                 make_text(
-                    f"Generated on {to_http_date(datetime.now())} for {conn_info.remote_address}"
+                    f"Generated on {to_http_date(datetime.now(timezone.utc))} for {conn_info.remote_address}"
                 ),
             )
         )

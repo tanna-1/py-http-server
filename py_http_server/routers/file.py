@@ -57,13 +57,12 @@ class FileRouter(Router):
         return resolved_path.is_relative_to(self.__document_root)
 
     def __get_content_type(self, path: Path):
-        ret = "application/octet-stream"
         mime_type, encoding = mimetypes.guess_type(path, False)
-        if mime_type:
-            ret = f"{mime_type}"
-            if encoding:
-                ret += f"; charset={encoding}"
-        return ret
+        if not mime_type:
+            return "application/octet-stream"
+        if not encoding:
+            return mime_type
+        return f"{mime_type}; charset={encoding}"
 
     # Gets the file last_modified time with second resolution for comparison with HTTP dates
     def __get_last_modified(self, path: Path) -> datetime:

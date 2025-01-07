@@ -22,16 +22,21 @@ class DebugRouter(CodeRouter):
 
     @route("/")
     def root_page(self, conn_info: ConnectionInfo, request: HTTPRequest):
-        content = f'<!DOCTYPE html><html><body><a href="/json">Try the /json page</a>'
-        content += f"<h3>Remote Address</h3><p>{conn_info.remote_address}</p>"
-        content += f"<h3>Request Path</h3><p>{request.path}</p>"
-        content += f"<h3>Request Query</h3><p>{request.query}</p>"
-        content += f"<h3>Request Method</h3><p>{request.method}</p>"
-        content += "<h3>Request Headers</h3><ul>"
-        for key, value in request.headers.items():
-            content += f"<li>{key}: {value}</li>"
-        content += "</ul></body></html>"
-        return self.http.html(content)
+        return self.http.html(
+            f"""
+<!DOCTYPE html><html><body>
+<a href="/json">Try the /json page</a>
+<h3>Remote Address</h3><p>{conn_info.remote_address}</p>
+<h3>Request Path</h3><p>{request.path}</p>
+<h3>Request Query</h3><p>{request.query}</p>
+<h3>Request Method</h3><p>{request.method}</p>
+<h3>Request Headers</h3>
+<ul>
+{''.join(f'<li>{key}: {value}</li>' for key, value in request.headers.items())}
+</ul>
+</body></html>
+"""
+        )
 
     @route("/error")
     def error_page(self, conn_info: ConnectionInfo, request: HTTPRequest):

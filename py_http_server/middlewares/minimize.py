@@ -31,6 +31,10 @@ class MinimizeMiddleware(Middleware):
         if not resp.body:
             return resp
 
+        # Return if an encoding is applied
+        if "Content-Encoding" in resp.headers:
+            return resp
+
         # Return if no content type is present
         content_type, _, encoding = resp.headers.get("Content-Type", "").partition(
             "; charset="
@@ -39,7 +43,7 @@ class MinimizeMiddleware(Middleware):
         content_type = content_type.strip().lower()
         if not content_type:
             return resp
-        
+
         # Default encoding to utf-8
         if not encoding:
             encoding = "utf-8"
@@ -49,16 +53,20 @@ class MinimizeMiddleware(Middleware):
         if not minimizer:
             return resp
 
-        if isinstance(resp.body, BytesBody):
-            # Directly minimize bytes bodies
-            resp.body.content = minimizer(resp.body.content.decode(encoding)).encode(
-                encoding
-            )
-        elif isinstance(resp.body, FileBody):
-            # Convert file bodies to bytes bodies for minimization
-            with resp.body.file_path.open("rb") as f:
-                resp.body = ResponseBody.from_bytes(
-                    minimizer(f.read().decode(encoding)).encode(encoding)
-                )
+        try:
+            if isinstance(resp.body, BytesBody):
+                # Directly minimize bytes bodies
+                resp.body.content = minimizer(
+                    resp.body.content.decode(encoding)
+                ).encode(encoding)
+            elif isinstance(resp.body, FileBody):
+                # Convert file bodies to bytes bodies for minimization
+                with resp.body.file_path.open("rb") as f:
+                    resp.body = ResponseBody.from_bytes(
+                        minimizer(f.read().decode(encoding)).encode(encoding)
+                    )
+        except Exception as exc:
+            LOG.warning("Skipping minimizer due to exception", exc_info=exc)
+            pass
 
         return resp

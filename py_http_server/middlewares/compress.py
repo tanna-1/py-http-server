@@ -72,6 +72,10 @@ class CompressMiddleware(Middleware):
         if not resp.body:
             return resp
 
+        # Return if an encoding is applied
+        if "Content-Encoding" in resp.headers:
+            return resp
+
         # Return if response size is below min or above max threshold for compression
         if not (self.__min_response_size <= len(resp.body) <= self.__max_response_size):
             return resp

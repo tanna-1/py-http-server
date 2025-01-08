@@ -80,7 +80,7 @@ class ProxyRouter(Router):
 
         # Add X-Forwarded-For and X-Real-IP headers if enabled
         if self.__add_x_forwarded:
-            x_forwarded_for = request.headers.get("X-Forwarded-For", "")
+            x_forwarded_for = request.headers.get("x-forwarded-for", "")
             if x_forwarded_for:
                 headers["X-Forwarded-For"] = (
                     f"{conn_info.remote_address.ip}, {x_forwarded_for}"

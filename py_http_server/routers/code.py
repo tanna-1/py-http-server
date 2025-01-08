@@ -1,5 +1,5 @@
 from ..networking import ConnectionInfo
-from ..http.constants import NO_CACHE_HEADERS
+from ..common.constants import NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
 from ..routers.base import Router

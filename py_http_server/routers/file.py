@@ -1,9 +1,8 @@
 from ..networking import ConnectionInfo
-from ..http.constants import NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
 from ..routers.base import Router
-from ..common import StrPath, file_etag, from_http_date, to_http_date
+from ..common import NO_CACHE_HEADERS, file_etag, from_http_date, to_http_date
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
@@ -22,7 +21,7 @@ LOG = log.getLogger("routers.file")
 class FileRouter(Router):
     def __init__(
         self,
-        document_root: StrPath,
+        document_root: str,
         generate_index: bool = True,
         enable_etag: bool = True,
         enable_last_modified: bool = True,

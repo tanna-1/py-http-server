@@ -1,22 +1,9 @@
-from .networking import ConnectionInfo
-from .http.constants import HEADER_DATE_FORMAT
-from .http.request import HTTPRequest
-from .http.response import HTTPResponse
+from .constants import HEADER_DATE_FORMAT
 from datetime import datetime, timezone
 from typing import Optional
-from abc import ABC, abstractmethod
 from pathlib import Path
 from math import ceil
 import base64
-
-StrPath = str
-
-
-class RequestHandler(ABC):
-    @abstractmethod
-    def __call__(
-        self, conn_info: ConnectionInfo, request: "HTTPRequest"
-    ) -> HTTPResponse: ...
 
 
 # Parse HTTP header date format

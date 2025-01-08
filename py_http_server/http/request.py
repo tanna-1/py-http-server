@@ -1,5 +1,5 @@
 from ..networking.connection_socket import ConnectionSocket
-from .constants import HTTP_VERSIONS, HeadersType
+from ..common.constants import HTTP_VERSIONS, HeadersType
 import urllib.parse
 
 

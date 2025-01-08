@@ -1,9 +1,8 @@
 from typing import Union
 from ..networking import ConnectionInfo
-from ..http.constants import NO_CACHE_HEADERS
 from ..http.response import HTTPResponseFactory
 from ..http.request import HTTPRequest
-from ..common import RequestHandler
+from ..common import RequestHandler, NO_CACHE_HEADERS
 from .base import Middleware
 
 

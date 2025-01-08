@@ -1,6 +1,5 @@
-from ..http.constants import NO_CACHE_HEADERS
+from ..common import RequestHandler, NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
-from ..common import RequestHandler
 from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
 from ..middlewares.base import Middleware

@@ -12,9 +12,9 @@ import mimetypes
 import urllib.parse
 import pkgutil
 
-template_data = pkgutil.get_data(__name__, "../data/index.html")
+template_data = pkgutil.get_data(__name__, "../templates/index.html")
 if not template_data:
-    raise RuntimeError("Couldn't load data/index.html from package.")
+    raise RuntimeError("Couldn't load template from package.")
 INDEX_TEMPLATE = template_data.decode("utf-8")
 LOG = log.getLogger("routers.file")
 

@@ -36,4 +36,4 @@ all = ["py_http_server[compress,minimize]"]
 py_http_server = "py_http_server:main"
 
 [tool.setuptools.package-data]
-py_http_server = ["data/*"]
+py_http_server = ["templates/*"]

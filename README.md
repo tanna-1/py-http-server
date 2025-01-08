@@ -57,3 +57,6 @@ app_main(
 
 3. **FileRouter**  
    Serves static files from a specified directory. Supports `ETag`, `Last-Modified` headers, and generated directory index pages.
+
+4. **ProxyRouter**  
+   Proxies requests to another server, optionally adding `X-Forwarded-For` and `X-Real-IP` headers.

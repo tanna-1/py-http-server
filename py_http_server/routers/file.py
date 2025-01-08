@@ -1,7 +1,7 @@
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
-from ..common import NO_CACHE_HEADERS, HeaderContainer, file_etag, from_http_date, to_http_date
+from ..common import RequestHandler, HeaderContainer, NO_CACHE_HEADERS, file_etag, from_http_date, to_http_date
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone

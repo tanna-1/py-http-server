@@ -1,7 +1,7 @@
 from ..http.response_body import EmptyBody
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
-from ..common import RequestHandler, to_http_date
+from ..common import HeadersType, RequestHandler, to_http_date
 from ..middlewares.base import Middleware
 from datetime import datetime, timezone
 
@@ -17,10 +17,10 @@ class DefaultMiddleware(Middleware):
             request.method = "GET"
 
         resp = self.next(conn_info, request)
-        resp.headers = {
+        resp.headers = HeadersType({
             "Server": "Tan's HTTP Server",
-            "Date": to_http_date(datetime.now(timezone.utc)),
-        } | resp.headers
+            "Date": to_http_date(datetime.now(timezone.utc))
+        }) | resp.headers
 
         # Omit the body if it was a HEAD request
         if original_method == "HEAD":

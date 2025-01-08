@@ -13,8 +13,8 @@ class VirtualHostMiddleware(Middleware):
 
     def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
         # Forward the request to correct host if host header is present and is a match
-        if "host" in request.headers:
-            host = request.headers["host"]
+        if "Host" in request.headers:
+            host = request.headers["Host"]
             if host in self.next_map:
                 return self.next_map[host](conn_info, request)
 

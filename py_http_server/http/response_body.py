@@ -53,7 +53,7 @@ class StreamingBody(ResponseBody):
 
     @property
     def headers(self) -> HeadersType:
-        return {"Transfer-Encoding": "chunked"}
+        return HeadersType({"Transfer-Encoding": "chunked"})
 
     def __get_chunk_size(self, val: bytes) -> bytes:
         return hex(len(val))[2:].upper().encode() + b"\r\n"
@@ -88,7 +88,7 @@ class FileBody(ResponseBody):
 
     @property
     def headers(self) -> HeadersType:
-        return {"Content-Length": str(len(self))}
+        return HeadersType({"Content-Length": str(len(self))})
 
     def send_to(self, conn: ConnectionSocket):
         with self.__file_path.open("rb") as f:
@@ -112,7 +112,7 @@ class BytesBody(ResponseBody):
 
     @property
     def headers(self) -> HeadersType:
-        return {"Content-Length": str(len(self))}
+        return HeadersType({"Content-Length": str(len(self))})
 
     def send_to(self, conn: ConnectionSocket):
         conn.send(self.content)
@@ -125,7 +125,7 @@ class EmptyBody(ResponseBody):
 
     @property
     def headers(self) -> HeadersType:
-        return {}
+        return HeadersType()
 
     def send_to(self, conn: ConnectionSocket):
         pass

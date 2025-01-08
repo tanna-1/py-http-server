@@ -1,4 +1,5 @@
 from py_http_server.http.response_body import ResponseBody
+from ..common import HeadersType
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
@@ -102,13 +103,13 @@ class ProxyRouter(Router):
         if self.__should_stream_response(response):
             return HTTPResponse(
                 status_code=response.status,
-                headers=response_headers,
+                headers=HeadersType(response_headers),
                 body=ResponseBody.from_stream(response),
             )
         else:
             return HTTPResponse(
                 status_code=response.status,
-                headers=response_headers,
+                headers=HeadersType(response_headers),
                 body=ResponseBody.from_bytes(response.data),
             )
 

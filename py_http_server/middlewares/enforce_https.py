@@ -2,7 +2,7 @@ from typing import Optional
 from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
-from ..common import RequestHandler
+from ..common import RequestHandler, HeadersType
 from ..middlewares.base import Middleware
 
 
@@ -22,11 +22,11 @@ class EnforceHTTPSMiddleware(Middleware):
             }
 
         # Only redirect if the host value is known
-        if not conn_info.secure and "host" in request.headers:
+        if not conn_info.secure and "Host" in request.headers:
             return self.http.redirect(
-                request.to_url(request.headers["host"], "https"),
+                request.to_url(request.headers["Host"], "https"),
                 True,
-                hsts_header,
+                HeadersType(hsts_header),
             )
 
         # Set the HSTS header

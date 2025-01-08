@@ -54,8 +54,8 @@ class CompressMiddleware(Middleware):
     def __get_best_encoding(self, request: HTTPRequest):
         mutual_encodings = []
 
-        if "accept-encoding" in request.headers:
-            for encoding in request.headers["accept-encoding"].split(","):
+        if "Accept-Encoding" in request.headers:
+            for encoding in request.headers["Accept-Encoding"].split(","):
                 encoding = encoding.lower().strip()
                 if encoding in ENCODINGS:
                     mutual_encodings.append(encoding)

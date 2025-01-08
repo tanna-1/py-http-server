@@ -97,16 +97,16 @@ class HTTPRequest:
             if version not in HTTP_VERSIONS:
                 raise ValueError("Invalid HTTP version")
 
-            headers: HeadersType = {}
+            headers = HeadersType()
             for line in header_lines[1:]:
                 key, _, val = line.partition(":")
-                headers[key.lower()] = val.strip()
+                headers[key] = val.strip()
         except (IndexError, ValueError, UnicodeDecodeError) as exc:
-            raise ValueError(f"Request header is malformed. Inner {exc}")
+            raise ValueError(f"Request header is malformed. Exception: {exc}")
 
         content_length = (
-            int(headers["content-length"])
-            if headers.get("content-length", "").isdigit()
+            int(headers["Content-Length"])
+            if headers.get("Content-Length", "").isdigit()
             else None
         )
 

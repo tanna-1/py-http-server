@@ -1,4 +1,4 @@
-from ..common import RequestHandler, NO_CACHE_HEADERS
+from ..common import RequestHandler, NO_CACHE_HEADERS, HeadersType
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
@@ -31,12 +31,12 @@ class BasicAuthMiddleware(Middleware):
         return False
 
     def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
-        if "authorization" in request.headers and self.__verify_authorization(
-            request.headers["authorization"]
+        if "Authorization" in request.headers and self.__verify_authorization(
+            request.headers["Authorization"]
         ):
             return self.next(conn_info, request)
 
         return self.http.status(
             401,
-            {"WWW-Authenticate": 'Basic realm="auth", charset="UTF-8"'},
+            HeadersType({"WWW-Authenticate": 'Basic realm="auth", charset="UTF-8"'}),
         )

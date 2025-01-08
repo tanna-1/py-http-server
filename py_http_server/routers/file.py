@@ -2,7 +2,7 @@ from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
 from ..routers.base import Router
-from ..common import NO_CACHE_HEADERS, file_etag, from_http_date, to_http_date
+from ..common import NO_CACHE_HEADERS, HeadersType, file_etag, from_http_date, to_http_date
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
@@ -77,12 +77,12 @@ class FileRouter(Router):
         """
         LOG.debug(f'Reading file "{path}"')
 
-        headers = {}
+        headers = HeadersType()
         if self.__enable_etag:
             etag = headers["ETag"] = file_etag(path)
 
             # Return 304 if ETag matches
-            if etag == request.headers.get("if-none-match", None):
+            if etag == request.headers.get("If-None-Match", None):
                 return self.http.status(304, headers)
 
         if self.__enable_last_modified:
@@ -92,10 +92,10 @@ class FileRouter(Router):
             """RFC9110: A recipient MUST ignore If-Modified-Since
                if the request contains an If-None-Match header field"""
             if (
-                "if-modified-since" in request.headers
-                and not "if-none-match" in request.headers
+                "If-Modified-Since" in request.headers
+                and not "If-None-Match" in request.headers
             ):
-                if_modified_since = from_http_date(request.headers["if-modified-since"])
+                if_modified_since = from_http_date(request.headers["If-Modified-Since"])
                 if if_modified_since and if_modified_since >= last_modified:
                     return self.http.status(304, headers)
 

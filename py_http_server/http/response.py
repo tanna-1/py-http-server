@@ -9,7 +9,7 @@ class HTTPResponse:
     def __init__(
         self,
         status_code: int,
-        headers: HeadersType = {},
+        headers: HeadersType = HeadersType(),
         body: Optional[ResponseBody] = None,
     ):
         self.status_code = status_code
@@ -69,7 +69,9 @@ class HTTPResponse:
 
 class HTTPResponseFactory:
     def __init__(
-        self, default_headers: HeadersType = {}, default_encoding: str = "utf-8"
+        self,
+        default_headers: HeadersType = HeadersType(),
+        default_encoding: str = "utf-8",
     ):
         self.default_headers = default_headers
         self.default_encoding = default_encoding
@@ -78,7 +80,7 @@ class HTTPResponseFactory:
         self,
         value: Any,
         status_code: int = 200,
-        additional_headers: HeadersType = {},
+        additional_headers: HeadersType = HeadersType(),
         encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
@@ -98,7 +100,7 @@ class HTTPResponseFactory:
         self,
         value: str,
         status_code: int = 200,
-        additional_headers: HeadersType = {},
+        additional_headers: HeadersType = HeadersType(),
         encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
@@ -117,7 +119,7 @@ class HTTPResponseFactory:
     def status(
         self,
         status_code: int,
-        additional_headers: HeadersType = {},
+        additional_headers: HeadersType = HeadersType(),
         encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
@@ -142,7 +144,7 @@ class HTTPResponseFactory:
         self,
         location: str,
         permanent: bool = False,
-        additional_headers: HeadersType = {},
+        additional_headers: HeadersType = HeadersType(),
     ) -> HTTPResponse:
         headers = additional_headers | {"Location": location}
         return self.status(301 if permanent else 302, headers)

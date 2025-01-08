@@ -8,9 +8,10 @@ class DebugRouter(CodeRouter):
     def json_page(self, conn_info: ConnectionInfo, request: HTTPRequest):
         return self.http.json(
             {
-                "remote_address": conn_info.remote_address,
+                "remote_address": conn_info.remote_address.ip,
+                "remote_port": conn_info.remote_address.port,
                 "request": {
-                    "headers": request.headers,
+                    "headers": dict(request.headers),
                     "path": request.path,
                     "query": request.query,
                     "method": request.method,

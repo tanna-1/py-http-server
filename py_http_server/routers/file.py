@@ -2,7 +2,7 @@ from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
 from ..routers.base import Router
-from ..common import NO_CACHE_HEADERS, HeadersType, file_etag, from_http_date, to_http_date
+from ..common import NO_CACHE_HEADERS, HeaderContainer, file_etag, from_http_date, to_http_date
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
@@ -77,7 +77,7 @@ class FileRouter(Router):
         """
         LOG.debug(f'Reading file "{path}"')
 
-        headers = HeadersType()
+        headers = HeaderContainer()
         if self.__enable_etag:
             etag = headers["ETag"] = file_etag(path)
 

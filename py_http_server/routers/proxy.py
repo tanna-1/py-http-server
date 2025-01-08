@@ -71,17 +71,15 @@ class ProxyRouter(Router):
 
     def __generate_request_headers(
         self, conn_info: ConnectionInfo, request: HTTPRequest
-    ) -> dict:
+    ) -> HeadersType:
         # Process request headers
-        headers: dict[str, str] = {
-            k: v
-            for k, v in request.headers.items()
-            if k.lower() not in IGNORED_REQUEST_HEADERS
-        }
+        headers = HeadersType(request.headers)
+        for header in IGNORED_REQUEST_HEADERS:
+            headers.pop(header, None)
 
         # Add X-Forwarded-For and X-Real-IP headers if enabled
         if self.__add_x_forwarded:
-            x_forwarded_for = request.headers.get("x-forwarded-for", "")
+            x_forwarded_for = request.headers.get("X-Forwarded-For", "")
             if x_forwarded_for:
                 headers["X-Forwarded-For"] = (
                     f"{conn_info.remote_address.ip}, {x_forwarded_for}"
@@ -94,11 +92,9 @@ class ProxyRouter(Router):
 
     def __generate_response(self, response: BaseHTTPResponse) -> HTTPResponse:
         # Process response headers
-        response_headers: dict[str, str] = {
-            k: v
-            for k, v in response.headers.items()
-            if k.lower() not in IGNORED_RESPONSE_HEADERS
-        }
+        response_headers = HeadersType(response.headers)
+        for header in IGNORED_RESPONSE_HEADERS:
+            response_headers.pop(header, None)
 
         if self.__should_stream_response(response):
             return HTTPResponse(

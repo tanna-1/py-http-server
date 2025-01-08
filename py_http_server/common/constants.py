@@ -1,8 +1,8 @@
 from .structures import CaseInsensitiveDict
 
-HeadersType = CaseInsensitiveDict[str]
+HeaderContainer = CaseInsensitiveDict[str]
 
-NO_CACHE_HEADERS = HeadersType({
+NO_CACHE_HEADERS = HeaderContainer({
     "Cache-Control": "no-cache",
     "Pragma": "no-cache",
     "Expires": "0",

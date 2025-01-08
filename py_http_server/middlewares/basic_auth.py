@@ -1,4 +1,4 @@
-from ..common import RequestHandler, NO_CACHE_HEADERS, HeadersType
+from ..common import RequestHandler, NO_CACHE_HEADERS, HeaderContainer
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
@@ -38,5 +38,5 @@ class BasicAuthMiddleware(Middleware):
 
         return self.http.status(
             401,
-            HeadersType({"WWW-Authenticate": 'Basic realm="auth", charset="UTF-8"'}),
+            HeaderContainer({"WWW-Authenticate": 'Basic realm="auth", charset="UTF-8"'}),
         )

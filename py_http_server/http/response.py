@@ -1,5 +1,5 @@
 from ..networking.connection_socket import ConnectionSocket
-from ..common.constants import STATUS_CODES, HeadersType
+from ..common.constants import STATUS_CODES, HeaderContainer
 from .response_body import ResponseBody
 from typing import Any, Optional
 import json
@@ -9,7 +9,7 @@ class HTTPResponse:
     def __init__(
         self,
         status_code: int,
-        headers: HeadersType = HeadersType(),
+        headers: HeaderContainer = HeaderContainer(),
         body: Optional[ResponseBody] = None,
     ):
         self.status_code = status_code
@@ -29,7 +29,7 @@ class HTTPResponse:
         return self.__headers
 
     @headers.setter
-    def headers(self, value: HeadersType):
+    def headers(self, value: HeaderContainer):
         self.__headers = value
 
     @property
@@ -70,7 +70,7 @@ class HTTPResponse:
 class HTTPResponseFactory:
     def __init__(
         self,
-        default_headers: HeadersType = HeadersType(),
+        default_headers: HeaderContainer = HeaderContainer(),
         default_encoding: str = "utf-8",
     ):
         self.default_headers = default_headers
@@ -80,7 +80,7 @@ class HTTPResponseFactory:
         self,
         value: Any,
         status_code: int = 200,
-        additional_headers: HeadersType = HeadersType(),
+        additional_headers: HeaderContainer = HeaderContainer(),
         encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
@@ -100,7 +100,7 @@ class HTTPResponseFactory:
         self,
         value: str,
         status_code: int = 200,
-        additional_headers: HeadersType = HeadersType(),
+        additional_headers: HeaderContainer = HeaderContainer(),
         encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
@@ -119,7 +119,7 @@ class HTTPResponseFactory:
     def status(
         self,
         status_code: int,
-        additional_headers: HeadersType = HeadersType(),
+        additional_headers: HeaderContainer = HeaderContainer(),
         encoding: Optional[str] = None,
     ) -> HTTPResponse:
         encoding = encoding if encoding else self.default_encoding
@@ -144,7 +144,7 @@ class HTTPResponseFactory:
         self,
         location: str,
         permanent: bool = False,
-        additional_headers: HeadersType = HeadersType(),
+        additional_headers: HeaderContainer = HeaderContainer(),
     ) -> HTTPResponse:
         headers = additional_headers | {"Location": location}
         return self.status(301 if permanent else 302, headers)

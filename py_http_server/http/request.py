@@ -1,5 +1,5 @@
 from ..networking.connection_socket import ConnectionSocket
-from ..common.constants import HTTP_VERSIONS, HeadersType
+from ..common.constants import HTTP_VERSIONS, HeaderContainer
 import urllib.parse
 
 
@@ -9,7 +9,7 @@ class HTTPRequest:
         method: str,
         path: str,
         query: str,
-        headers: HeadersType,
+        headers: HeaderContainer,
         version: str,
         body: bytes,
     ):
@@ -57,7 +57,7 @@ class HTTPRequest:
         return self.__headers
 
     @headers.setter
-    def headers(self, value: HeadersType):
+    def headers(self, value: HeaderContainer):
         self.__headers = value
 
     @property
@@ -97,7 +97,7 @@ class HTTPRequest:
             if version not in HTTP_VERSIONS:
                 raise ValueError("Invalid HTTP version")
 
-            headers = HeadersType()
+            headers = HeaderContainer()
             for line in header_lines[1:]:
                 key, _, val = line.partition(":")
                 headers[key] = val.strip()

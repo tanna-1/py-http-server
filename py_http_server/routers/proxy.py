@@ -1,5 +1,5 @@
 from py_http_server.http.response_body import ResponseBody
-from ..common import HeadersType
+from ..common import HeaderContainer
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
@@ -71,9 +71,9 @@ class ProxyRouter(Router):
 
     def __generate_request_headers(
         self, conn_info: ConnectionInfo, request: HTTPRequest
-    ) -> HeadersType:
+    ) -> HeaderContainer:
         # Process request headers
-        headers = HeadersType(request.headers)
+        headers = HeaderContainer(request.headers)
         for header in IGNORED_REQUEST_HEADERS:
             headers.pop(header, None)
 
@@ -92,20 +92,20 @@ class ProxyRouter(Router):
 
     def __generate_response(self, response: BaseHTTPResponse) -> HTTPResponse:
         # Process response headers
-        response_headers = HeadersType(response.headers)
+        response_headers = HeaderContainer(response.headers)
         for header in IGNORED_RESPONSE_HEADERS:
             response_headers.pop(header, None)
 
         if self.__should_stream_response(response):
             return HTTPResponse(
                 status_code=response.status,
-                headers=HeadersType(response_headers),
+                headers=HeaderContainer(response_headers),
                 body=ResponseBody.from_stream(response),
             )
         else:
             return HTTPResponse(
                 status_code=response.status,
-                headers=HeadersType(response_headers),
+                headers=HeaderContainer(response_headers),
                 body=ResponseBody.from_bytes(response.data),
             )
 

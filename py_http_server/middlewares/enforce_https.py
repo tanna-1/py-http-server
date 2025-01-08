@@ -2,7 +2,7 @@ from typing import Optional
 from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
-from ..common import RequestHandler, HeadersType
+from ..common import RequestHandler, HeaderContainer
 from ..middlewares.base import Middleware
 
 
@@ -26,9 +26,9 @@ class EnforceHTTPSMiddleware(Middleware):
             return self.http.redirect(
                 request.to_url(request.headers["Host"], "https"),
                 True,
-                HeadersType(hsts_header),
+                HeaderContainer(hsts_header),
             )
 
         # Set the HSTS header
-        resp.headers = resp.headers | hsts_header
+        resp.headers |= hsts_header
         return resp

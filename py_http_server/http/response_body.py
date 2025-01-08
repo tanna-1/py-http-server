@@ -1,7 +1,7 @@
 from pathlib import Path
 from abc import ABC, abstractmethod
 from io import IOBase
-from ..common.constants import HeadersType
+from ..common.constants import HeaderContainer
 from ..networking.connection_socket import ConnectionSocket
 
 
@@ -14,7 +14,7 @@ class ResponseBody(ABC):
 
     @property
     @abstractmethod
-    def headers(self) -> HeadersType: ...
+    def headers(self) -> HeaderContainer: ...
 
     @abstractmethod
     def send_to(self, conn: ConnectionSocket) -> None: ...
@@ -52,8 +52,8 @@ class StreamingBody(ResponseBody):
         self.__stream = value
 
     @property
-    def headers(self) -> HeadersType:
-        return HeadersType({"Transfer-Encoding": "chunked"})
+    def headers(self) -> HeaderContainer:
+        return HeaderContainer({"Transfer-Encoding": "chunked"})
 
     def __get_chunk_size(self, val: bytes) -> bytes:
         return hex(len(val))[2:].upper().encode() + b"\r\n"
@@ -87,8 +87,8 @@ class FileBody(ResponseBody):
         self.__len = value.stat().st_size
 
     @property
-    def headers(self) -> HeadersType:
-        return HeadersType({"Content-Length": str(len(self))})
+    def headers(self) -> HeaderContainer:
+        return HeaderContainer({"Content-Length": str(len(self))})
 
     def send_to(self, conn: ConnectionSocket):
         with self.__file_path.open("rb") as f:
@@ -111,8 +111,8 @@ class BytesBody(ResponseBody):
         self.__content = value
 
     @property
-    def headers(self) -> HeadersType:
-        return HeadersType({"Content-Length": str(len(self))})
+    def headers(self) -> HeaderContainer:
+        return HeaderContainer({"Content-Length": str(len(self))})
 
     def send_to(self, conn: ConnectionSocket):
         conn.send(self.content)
@@ -124,8 +124,8 @@ class EmptyBody(ResponseBody):
         return 0
 
     @property
-    def headers(self) -> HeadersType:
-        return HeadersType()
+    def headers(self) -> HeaderContainer:
+        return HeaderContainer()
 
     def send_to(self, conn: ConnectionSocket):
         pass

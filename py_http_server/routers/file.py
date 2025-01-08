@@ -1,7 +1,6 @@
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
-from ..routers.base import Router
 from ..common import NO_CACHE_HEADERS, HeaderContainer, file_etag, from_http_date, to_http_date
 from .. import log
 from pathlib import Path
@@ -18,7 +17,7 @@ INDEX_TEMPLATE = template_data.decode("utf-8")
 LOG = log.getLogger("routers.file")
 
 
-class FileRouter(Router):
+class FileRouter(RequestHandler):
     def __init__(
         self,
         document_root: str,

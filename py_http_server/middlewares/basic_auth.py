@@ -2,14 +2,13 @@ from ..common import RequestHandler, NO_CACHE_HEADERS, HeaderContainer
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
-from ..middlewares.base import Middleware
 from .. import log
 import base64
 
 LOG = log.getLogger("middlewares.basic_auth")
 
 
-class BasicAuthMiddleware(Middleware):
+class BasicAuthMiddleware(RequestHandler):
     def __init__(self, next: RequestHandler, credentials: dict[str, str]):
         self.next = next
         self.__cred = credentials

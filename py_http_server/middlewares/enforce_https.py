@@ -3,10 +3,9 @@ from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..common import RequestHandler, HeaderContainer
-from ..middlewares.base import Middleware
 
 
-class EnforceHTTPSMiddleware(Middleware):
+class EnforceHTTPSMiddleware(RequestHandler):
     def __init__(self, next: RequestHandler, hsts_max_age: Optional[int] = None):
         self.__hsts_max_age = hsts_max_age
         self.next = next

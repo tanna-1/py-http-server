@@ -1,8 +1,7 @@
 from ..networking import ConnectionInfo
-from ..common.constants import NO_CACHE_HEADERS
+from ..common import RequestHandler, NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
-from ..routers.base import Router
 from .. import log
 from typing import Callable
 
@@ -17,7 +16,7 @@ def route(path):
     return _route_decorator
 
 
-class CodeRouter(Router):
+class CodeRouter(RequestHandler):
     def __init__(self):
         self.http = HTTPResponseFactory(NO_CACHE_HEADERS)
 

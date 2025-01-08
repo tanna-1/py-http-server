@@ -2,7 +2,6 @@ from ..networking import ConnectionInfo
 from ..http.response_body import BytesBody, FileBody, ResponseBody
 from ..http.request import HTTPRequest
 from ..common import RequestHandler
-from ..middlewares.base import Middleware
 from .. import log
 import json
 
@@ -19,7 +18,7 @@ except:
     pass
 
 
-class MinimizeMiddleware(Middleware):
+class MinimizeMiddleware(RequestHandler):
     def __init__(self, next: RequestHandler):
         self.next = next
         LOG.info(f"Enabled { ', '.join(MINIMIZERS.keys())}")

@@ -1,9 +1,8 @@
 from py_http_server.http.response_body import ResponseBody
-from ..common import HeaderContainer
+from ..common import HeaderContainer, RequestHandler
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
-from ..routers.base import Router
 from urllib3 import PoolManager, BaseHTTPResponse
 from urllib3.exceptions import HTTPError
 
@@ -21,12 +20,12 @@ IGNORED_REQUEST_HEADERS = ["host", "connection"]
 IGNORED_RESPONSE_HEADERS = ["connection", "transfer-encoding"]
 
 
-class ProxyRouter(Router):
+class ProxyRouter(RequestHandler):
     def __init__(
         self,
         proxy_host: str,
         add_x_forwarded: bool = False,
-        stream_threshold=1048576,
+        stream_threshold: int = 1048576,
         decode_content: bool = False,
     ):
         """Inits ProxyRouter.

@@ -29,8 +29,8 @@ class CodeRouter(Router):
             value: Callable[[ConnectionInfo, HTTPRequest], HTTPResponse] = getattr(
                 self, member
             )
-            if callable(value) and "_route" in dir(value):
-                path = value._route["path"]
+            if callable(value) and hasattr(value, "_route"):
+                path = getattr(value, "_route")["path"]
                 LOG.debug(f'Discovered handler "{value.__qualname__}" for "{path}"')
                 self.__handlers[path] = value
 

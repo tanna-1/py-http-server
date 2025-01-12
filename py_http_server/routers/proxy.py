@@ -6,49 +6,41 @@ from ..http.response import HTTPResponse, HTTPResponseFactory
 from urllib3 import PoolManager, BaseHTTPResponse
 from urllib3.exceptions import HTTPError
 
-ALLOWED_METHODS = [
-    "GET",
-    "POST",
-    "PUT",
-    "DELETE",
-    "PATCH",
-    "CONNECT",
-    "OPTIONS",
-    "TRACE",
-]
-IGNORED_REQUEST_HEADERS = ["host", "connection"]
-IGNORED_RESPONSE_HEADERS = ["connection", "transfer-encoding"]
+IGNORED_REQUEST_HEADERS = {"connection"}
+IGNORED_RESPONSE_HEADERS = {"connection", "transfer-encoding"}
 
 
 class ProxyRouter(RequestHandler):
     def __init__(
         self,
         proxy_host: str,
-        add_x_forwarded: bool = False,
         stream_threshold: int = 1048576,
+        add_forwarded_headers: bool = False,
         decode_content: bool = False,
+        preserve_host: bool = False,
     ):
         """Inits ProxyRouter.
 
         Args:
         proxy_host -- The base URL of the target server to proxy requests to.
-        add_x_forwarded -- If True, adds X-Forwarded-For and X-Real-IP headers.
         stream_threshold -- Responses past this threshold will be streamed via chunked encoding.
+        add_forwarded_headers -- If True, adds X-Forwarded-For and X-Real-IP headers.
         decode_content -- If True, decodes the response content based on the Content-Encoding header.
+        preserve_host -- If True, preserves the Host header in the request.
         """
 
         # Remove trailing slashes because the path will always start with /
         self.__proxy_host = proxy_host.rstrip("/")
-        self.__add_x_forwarded = add_x_forwarded
+
         self.__stream_threshold = stream_threshold
+        self.__add_x_forwarded = add_forwarded_headers
         self.__decode_content = decode_content
+        self.__preserve_host = preserve_host
+
         self.__pool = PoolManager()
         self.http = HTTPResponseFactory()
 
     def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest) -> HTTPResponse:
-        if request.method not in ALLOWED_METHODS:
-            return self.http.status(405)
-
         url = f"{self.__proxy_host}{request.path}{request.query}"
         headers = self.__generate_request_headers(conn_info, request)
 
@@ -76,16 +68,27 @@ class ProxyRouter(RequestHandler):
         for header in IGNORED_REQUEST_HEADERS:
             headers.pop(header, None)
 
-        # Add X-Forwarded-For and X-Real-IP headers if enabled
+        # Add X-Forwarded-* headers
         if self.__add_x_forwarded:
+            # X-Forwarded-For
             x_forwarded_for = request.headers.get("X-Forwarded-For", "")
             if x_forwarded_for:
                 headers["X-Forwarded-For"] = (
-                    f"{conn_info.remote_address.ip}, {x_forwarded_for}"
+                    f"{x_forwarded_for}, {conn_info.remote_address.ip}"
                 )
             else:
                 headers["X-Forwarded-For"] = conn_info.remote_address.ip
-            headers["X-Real-IP"] = conn_info.remote_address.ip
+
+            # X-Forwarded-Host
+            if "Host" in request.headers:
+                headers["X-Forwarded-Host"] = request.headers["Host"]
+
+            # X-Forwarded-Proto
+            headers["X-Forwarded-Proto"] = "https" if conn_info.secure else "http"
+
+        # Drop Host header if not preserving
+        if not self.__preserve_host:
+            headers.pop("host", None)
 
         return headers
 

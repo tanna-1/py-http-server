@@ -36,10 +36,10 @@ app_main(
 4. **VirtualHostMiddleware**  
    Forwards the request to different handler chains based on the `Host` header's value.
 
-5. **MinimizeMiddleware**
+5. **MinimizeMiddleware**  
    Minimizes HTML, CSS, JS and JSON responses. Not recommended for production use.
 
-5. **EnforceHTTPSMiddleware**
+5. **EnforceHTTPSMiddleware**  
    Redirects all HTTP requests to HTTPS URLs, optionally adds HSTS header to all responses.
 
 ### Routers

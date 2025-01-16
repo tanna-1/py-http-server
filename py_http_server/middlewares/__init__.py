@@ -5,3 +5,4 @@ from .minimize import *
 from .default import *
 from .virtual_host import *
 from .enforce_https import *
+from .rewrite_redirects import *

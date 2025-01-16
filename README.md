@@ -3,11 +3,12 @@
 ## About
 This project implements an HTTP(S) server supporting HTTP versions 1.0 and 1.1.
 
-## Configuration
+## Configuration Examples
 To configure the server, `py_http_server.app_main()` can be called from a Python script with custom arguments.
 
 The argument `handler_chain` can be constructed using user-defined classes or built-in components like below.
 
+### Serving the current working directory
 ```python
 from py_http_server.middlewares import CompressMiddleware, DefaultMiddleware
 from py_http_server.routers import FileRouter
@@ -16,6 +17,33 @@ from py_http_server import app_main
 
 app_main(
     handler_chain=DefaultMiddleware(CompressMiddleware(FileRouter("."))),
+    http_listeners=[
+        TCPAddress("127.0.0.1", 80),
+        TCPAddress("::1", 80),
+    ],
+)
+```
+
+### Transparent reverse proxy
+```python
+from py_http_server.middlewares import (
+    DefaultMiddleware,
+    CompressMiddleware,
+    RewriteRedirectsMiddleware,
+)
+from py_http_server.routers import ProxyRouter
+from py_http_server.networking import TCPAddress
+from py_http_server import app_main
+
+app_main(
+    handler_chain=DefaultMiddleware(
+        CompressMiddleware(
+            RewriteRedirectsMiddleware(
+                ProxyRouter("http://localhost:8080", add_forwarded_headers=False),
+                {"localhost:8080": "localhost"},
+            )
+        )
+    ),
     http_listeners=[
         TCPAddress("127.0.0.1", 80),
         TCPAddress("::1", 80),
@@ -42,6 +70,9 @@ app_main(
 5. **EnforceHTTPSMiddleware**  
    Redirects all HTTP requests to HTTPS URLs, optionally adds HSTS header to all responses.
 
+5. **RewriteRedirectsMiddleware**  
+   Rewrites the Location, Content-Location and URI headers using the provided alias map.
+
 ### Routers
 > [!NOTE]
 > `CodeRouter` is a base class and cannot be used on its own.
@@ -59,4 +90,4 @@ app_main(
    Serves static files from a specified directory. Supports `ETag`, `Last-Modified` headers, and generated directory index pages.
 
 4. **ProxyRouter**  
-   Proxies requests to another server, optionally adding `X-Forwarded-For` and `X-Real-IP` headers.
+   Proxies requests to another server. Supports `X-Forwarded-{For, Host, Proto}` and `Forwarded` headers and can preserve `Host` header.

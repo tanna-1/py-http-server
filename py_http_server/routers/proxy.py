@@ -15,18 +15,18 @@ class ProxyRouter(RequestHandler):
         self,
         proxy_host: str,
         stream_threshold: int = 1048576,
-        add_forwarded_headers: bool = False,
-        decode_content: bool = False,
+        add_forwarded_headers: bool = True,
         preserve_host: bool = False,
+        decode_content: bool = False,
     ):
         """Inits ProxyRouter.
 
         Args:
         proxy_host -- The base URL of the target server to proxy requests to.
         stream_threshold -- Responses past this threshold will be streamed via chunked encoding.
-        add_forwarded_headers -- If True, adds X-Forwarded-For and X-Real-IP headers.
-        decode_content -- If True, decodes the response content based on the Content-Encoding header.
+        add_forwarded_headers -- If True, adds X-Forwarded-{For, Proto, Host} and Forwarded headers.
         preserve_host -- If True, preserves the Host header in the request.
+        decode_content -- If True, decodes the response content based on the Content-Encoding header.
         """
 
         # Remove trailing slashes because the path will always start with /
@@ -68,16 +68,13 @@ class ProxyRouter(RequestHandler):
         for header in IGNORED_REQUEST_HEADERS:
             headers.pop(header, None)
 
-        # Add X-Forwarded-* headers
+        # Add X-Forwarded-* and Forwarded headers
         if self.__add_x_forwarded:
             # X-Forwarded-For
-            x_forwarded_for = request.headers.get("X-Forwarded-For", "")
-            if x_forwarded_for:
-                headers["X-Forwarded-For"] = (
-                    f"{x_forwarded_for}, {conn_info.remote_address.ip}"
-                )
-            else:
-                headers["X-Forwarded-For"] = conn_info.remote_address.ip
+            x_forwarded_for = request.headers.get("X-Forwarded-For", None)
+            headers["X-Forwarded-For"] = (
+                f"{x_forwarded_for}, " if x_forwarded_for else ""
+            ) + conn_info.remote_address.ip
 
             # X-Forwarded-Host
             if "Host" in request.headers:
@@ -85,6 +82,19 @@ class ProxyRouter(RequestHandler):
 
             # X-Forwarded-Proto
             headers["X-Forwarded-Proto"] = "https" if conn_info.secure else "http"
+
+            # Forwarded
+            forwarded = request.headers.get("Forwarded", None)
+            headers["Forwarded"] = (f"{forwarded}, " if forwarded else "") + (
+                f"by={conn_info.local_address.ip}"
+                + f";for={conn_info.remote_address.ip}"
+                + (
+                    f";host={headers['X-Forwarded-Host']}"
+                    if "X-Forwarded-Host" in headers
+                    else ""
+                )
+                + f";proto={headers['X-Forwarded-Proto']}"
+            )
 
         # Drop Host header if not preserving
         if not self.__preserve_host:

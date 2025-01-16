@@ -12,12 +12,10 @@ class ConnectionThread(threading.Thread):
     def __init__(
         self,
         conn: ConnectionSocket,
-        conn_info: ConnectionInfo,
         handler: RequestHandler,
     ):
         super().__init__()
         self.__conn = conn
-        self.__inf = conn_info
         self.__handler = handler
         self.__disposed = False
 
@@ -37,14 +35,18 @@ class ConnectionThread(threading.Thread):
         if self.__disposed:
             raise RuntimeError("Cannot run a disposed ConnectionThread")
 
+        conn_info = ConnectionInfo(
+            self.__conn.remote_address, self.__conn.remote_address, self.__conn.has_ssl
+        )
+
         try:
             while True:
                 # Read request from socket
                 req = HTTPRequest.receive_from(self.__conn)
-                LOG.info(f"({self.__inf.remote_address}) {req}")
+                LOG.info(f"({self.__conn.remote_address}) {req}")
 
                 # Execute the handler chain
-                resp = self.__handler(self.__inf, req)
+                resp = self.__handler(conn_info, req)
                 conn_policy = self.__get_connection_policy(req)
                 resp.headers["Connection"] = conn_policy
 
@@ -61,7 +63,7 @@ class ConnectionThread(threading.Thread):
             # Suppress error messages on dispose() call
             if not self.__disposed:
                 LOG.exception(
-                    f"({self.__inf.remote_address}) Error in ConnectionThread",
+                    f"({self.__conn.remote_address}) Error in ConnectionThread",
                     exc_info=exc,
                 )
 
@@ -75,4 +77,4 @@ class ConnectionThread(threading.Thread):
         if not self.__disposed:
             self.__disposed = True
             self.__conn.close()
-            LOG.debug(f"({self.__inf.remote_address}) Closed connection.")
+            LOG.debug(f"({self.__conn.remote_address}) Closed connection.")

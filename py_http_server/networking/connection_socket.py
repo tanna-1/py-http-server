@@ -1,5 +1,7 @@
 import socket
+import ssl
 from platform import platform
+from py_http_server.networking.address import TCPAddress
 
 _PLATFORM = platform()
 _SOCKET_NOPUSH_OPTION = None
@@ -8,7 +10,7 @@ if _PLATFORM.startswith("FreeBSD"):
 elif _PLATFORM.startswith("OpenBSD"):
     _SOCKET_NOPUSH_OPTION = 0x10
 elif _PLATFORM.startswith("Linux"):
-    _SOCKET_NOPUSH_OPTION = socket.TCP_CORK
+    _SOCKET_NOPUSH_OPTION = socket.TCP_CORK  # type: ignore
 # Windows doesn't have an equivalent
 
 
@@ -41,6 +43,28 @@ class ConnectionSocket:
         self.__socket = sock
         self.__enable_sendfile = enable_sendfile
 
+        self.__has_ssl = isinstance(sock, ssl.SSLSocket)
+        self.__remote_address = None
+        self.__local_address = None
+
+    @property
+    def has_ssl(self) -> bool:
+        return self.__has_ssl
+
+    @property
+    def local_address(self) -> TCPAddress:
+        if self.__local_address == None:
+            addr = self.__socket.getsockname()
+            self.__local_address = TCPAddress(addr[0], addr[1])
+        return self.__local_address
+
+    @property
+    def remote_address(self) -> TCPAddress:
+        if self.__remote_address == None:
+            addr = self.__socket.getpeername()
+            self.__remote_address = TCPAddress(addr[0], addr[1])
+        return self.__remote_address
+
     def recv(self, bufsize: int, flags: int = 0) -> bytes:
         ret = self.__socket.recv(bufsize, flags)
         if len(ret) == 0:
@@ -54,8 +78,8 @@ class ConnectionSocket:
         if self.__enable_sendfile:
             return self.__socket.sendfile(file, offset, count)
         else:
-            return self.__socket._sendfile_use_send(file, offset, count)
-        
+            return self.__socket._sendfile_use_send(file, offset, count)  # type: ignore
+
     def flush(self):
         # Force flush of the socket. Only tested on Linux.
         if not self.__enable_nodelay:

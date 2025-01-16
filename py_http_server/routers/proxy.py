@@ -108,7 +108,7 @@ class ProxyRouter(RequestHandler):
         for header in IGNORED_RESPONSE_HEADERS:
             response_headers.pop(header, None)
 
-        if self.__should_stream_response(response):
+        if self.__stream_required(response):
             return HTTPResponse(
                 status_code=response.status,
                 headers=HeaderContainer(response_headers),
@@ -121,12 +121,17 @@ class ProxyRouter(RequestHandler):
                 body=ResponseBody.from_bytes(response.data),
             )
 
-    def __should_stream_response(self, response: BaseHTTPResponse) -> bool:
-        # Stream responses if content size is above threshold or is unknown
-        content_length = response.headers.get("Content-Length")
-        try:
-            return (
-                content_length is None or int(content_length) > self.__stream_threshold
-            )
-        except ValueError:
-            return True
+    def __stream_required(self, response: BaseHTTPResponse) -> bool:
+        # Stream responses if Transfer-Encoding is chunked
+        if "Transfer-Encoding" in response.headers:
+            if "chunked" in [
+                x.strip().lower()
+                for x in response.headers["Transfer-Encoding"].split(",")
+            ]:
+                return True
+
+        # Stream if Content-Length is above threshold
+        if "Content-Length" in response.headers:
+            return int(response.headers["Content-Length"]) > self.__stream_threshold
+
+        return False

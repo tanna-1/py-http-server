@@ -59,6 +59,9 @@ class ConnectionThread(threading.Thread):
         except GracefulDisconnectException:
             # Graceful disconnection is not an error
             pass
+        except ConnectionResetError:
+            # Ungraceful disconnection is also not an error
+            pass
         except Exception as exc:
             # Suppress error messages on dispose() call
             if not self.__disposed:

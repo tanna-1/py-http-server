@@ -4,6 +4,7 @@ For licensing details, refer to `structures.LICENSE` and `structures.NOTICE`.
 Note that this file has been modified from its original version.
 """
 
+from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping
 from typing import Iterator
 
@@ -36,7 +37,7 @@ class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
     """
 
     def __init__(self, data=None, /, **kwargs):
-        self.__store: dict[str, tuple[str, V_T]] = {}
+        self.__store: OrderedDict[str, tuple[str, V_T]] = OrderedDict()
         if data is not None:
             self.update(data)
         if kwargs:

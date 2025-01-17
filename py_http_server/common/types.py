@@ -1,14 +1,13 @@
-from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..networking import ConnectionInfo
     from ..http.request import HTTPRequest
     from ..http.response import HTTPResponse
-    from collections.abc import Iterator, Callable
+    from collections.abc import Iterator
 
 from collections import OrderedDict
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
 from abc import ABC, abstractmethod
 
 
@@ -64,14 +63,14 @@ class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
         # Uses lowercase key for lookup
         del self.__store[key.lower()]
 
-    def __iter__(self) -> Iterator[str]:
+    def __iter__(self) -> "Iterator[str]":
         # Returns cased keys
         return (k for k, _ in self.__store.values())
 
     def __len__(self) -> int:
         return len(self.__store)
 
-    def lower_items(self) -> Iterator[tuple[str, V_T]]:
+    def lower_items(self) -> "Iterator[tuple[str, V_T]]":
         # Like items(), but with lowercase keys.
         return ((k, v[1]) for k, v in self.__store.items())
 
@@ -85,7 +84,7 @@ class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
 
         return dict(self.lower_items()) == dict(other.lower_items())
 
-    def __or__(self, other) -> CaseInsensitiveDict[V_T]:
+    def __or__(self, other) -> "CaseInsensitiveDict[V_T]":
         if not isinstance(other, Mapping):
             return NotImplemented
 
@@ -93,14 +92,14 @@ class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
         new.update(other)
         return new
 
-    def __ior__(self, other) -> CaseInsensitiveDict[V_T]:
+    def __ior__(self, other) -> "CaseInsensitiveDict[V_T]":
         if not isinstance(other, Mapping):
             return NotImplemented
 
         self.update(other)
         return self
 
-    def copy(self) -> CaseInsensitiveDict[V_T]:
+    def copy(self) -> "CaseInsensitiveDict[V_T]":
         return CaseInsensitiveDict(self)
 
     def __repr__(self) -> str:
@@ -110,10 +109,10 @@ class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
 class RequestHandlerABC(ABC):
     @abstractmethod
     def __call__(
-        self, conn_info: ConnectionInfo, request: HTTPRequest
-    ) -> HTTPResponse: ...
+        self, conn_info: "ConnectionInfo", request: "HTTPRequest"
+    ) -> "HTTPResponse": ...
 
 
-RequestHandler = Callable[[ConnectionInfo, HTTPRequest], HTTPResponse]
+RequestHandler = Callable[["ConnectionInfo", "HTTPRequest"], "HTTPResponse"]
 
 HeaderContainer = CaseInsensitiveDict[str]

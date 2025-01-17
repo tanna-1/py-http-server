@@ -2,13 +2,13 @@ from urllib.parse import urlparse
 from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
-from ..common import RequestHandler
+from ..common import RequestHandlerABC, RequestHandler
 
 REWRITE_STATUS_CODES = {201, 301, 302, 303, 307, 308}
 REWRITE_HEADERS = {"Location", "Content-Location", "URI"}
 
 
-class RewriteRedirectsMiddleware(RequestHandler):
+class RewriteRedirectsMiddleware(RequestHandlerABC):
     def __init__(self, next: RequestHandler, alias_map: dict[str, str]):
         self.__alias_map = alias_map
         self.next = next

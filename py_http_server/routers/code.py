@@ -1,5 +1,5 @@
 from ..networking import ConnectionInfo
-from ..common import RequestHandler, NO_CACHE_HEADERS
+from ..common import RequestHandlerABC, NO_CACHE_HEADERS
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
 from .. import log
@@ -16,7 +16,7 @@ def route(path):
     return _route_decorator
 
 
-class CodeRouter(RequestHandler):
+class CodeRouter(RequestHandlerABC):
     def __init__(self):
         self.http = HTTPResponseFactory(NO_CACHE_HEADERS)
 

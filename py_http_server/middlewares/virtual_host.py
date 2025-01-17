@@ -2,10 +2,10 @@ from typing import Union
 from ..networking import ConnectionInfo
 from ..http.response import HTTPResponseFactory
 from ..http.request import HTTPRequest
-from ..common import RequestHandler, NO_CACHE_HEADERS
+from ..common import RequestHandlerABC, RequestHandler, NO_CACHE_HEADERS
 
 
-class VirtualHostMiddleware(RequestHandler):
+class VirtualHostMiddleware(RequestHandlerABC):
     def __init__(self, next_map: dict[Union[str, None], RequestHandler]):
         self.next_map = next_map
         self.http = HTTPResponseFactory(NO_CACHE_HEADERS)

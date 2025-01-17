@@ -1,7 +1,7 @@
 from ..networking import ConnectionInfo
 from ..http.response_body import BytesBody, FileBody, ResponseBody
 from ..http.request import HTTPRequest
-from ..common import RequestHandler
+from ..common import RequestHandlerABC, RequestHandler
 from .. import log
 
 LOG = log.getLogger("middlewares.compress")
@@ -36,7 +36,7 @@ except:
     pass
 
 
-class CompressMiddleware(RequestHandler):
+class CompressMiddleware(RequestHandlerABC):
     def __init__(
         self,
         next: RequestHandler,

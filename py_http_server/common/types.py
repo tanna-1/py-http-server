@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from ..networking import ConnectionInfo
     from ..http.request import HTTPRequest
     from ..http.response import HTTPResponse
-    from typing import Iterator
+    from collections.abc import Iterator, Callable
 
 from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping
@@ -107,11 +107,13 @@ class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
         return f"CaseInsensitiveDict({repr(dict(self.items()))})"
 
 
-class RequestHandler(ABC):
+class RequestHandlerABC(ABC):
     @abstractmethod
     def __call__(
         self, conn_info: ConnectionInfo, request: HTTPRequest
     ) -> HTTPResponse: ...
 
+
+RequestHandler = Callable[[ConnectionInfo, HTTPRequest], HTTPResponse]
 
 HeaderContainer = CaseInsensitiveDict[str]

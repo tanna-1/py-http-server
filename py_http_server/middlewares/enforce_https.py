@@ -2,10 +2,10 @@ from typing import Optional
 from ..http.response import HTTPResponseFactory
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
-from ..common import RequestHandler, HeaderContainer
+from ..common import RequestHandlerABC, RequestHandler, HeaderContainer
 
 
-class EnforceHTTPSMiddleware(RequestHandler):
+class EnforceHTTPSMiddleware(RequestHandlerABC):
     def __init__(self, next: RequestHandler, hsts_max_age: Optional[int] = None):
         self.__hsts_max_age = hsts_max_age
         self.next = next

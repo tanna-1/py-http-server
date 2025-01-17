@@ -1,11 +1,11 @@
 from ..http.response_body import EmptyBody
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
-from ..common import HeaderContainer, RequestHandler, to_http_date
+from ..common import RequestHandlerABC, HeaderContainer, RequestHandler, to_http_date
 from datetime import datetime, timezone
 
 
-class DefaultMiddleware(RequestHandler):
+class DefaultMiddleware(RequestHandlerABC):
     def __init__(self, next: RequestHandler):
         self.next = next
 

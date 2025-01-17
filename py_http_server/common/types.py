@@ -1,15 +1,24 @@
-"""
-This file is part of the Requests library and is distributed under the Apache License 2.0.
-For licensing details, refer to `structures.LICENSE` and `structures.NOTICE`.
-Note that this file has been modified from its original version.
-"""
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..networking import ConnectionInfo
+    from ..http.request import HTTPRequest
+    from ..http.response import HTTPResponse
+    from typing import Iterator
 
 from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping
-from typing import Iterator
+from abc import ABC, abstractmethod
 
 
 class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
+    """LICENSE NOTICE:
+    The CaseInsensitiveDict class is part of the Requests library and is distributed under the Apache License 2.0.
+    For licensing details, refer to `requests.LICENSE` and `requests.NOTICE`.
+    Note that this code has been modified from its original version.
+    """
+
     """A case-insensitive ``dict``-like object.
 
     Implements all methods and operations of
@@ -76,7 +85,7 @@ class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
 
         return dict(self.lower_items()) == dict(other.lower_items())
 
-    def __or__(self, other) -> "CaseInsensitiveDict[V_T]":
+    def __or__(self, other) -> CaseInsensitiveDict[V_T]:
         if not isinstance(other, Mapping):
             return NotImplemented
 
@@ -84,15 +93,25 @@ class CaseInsensitiveDict[V_T](MutableMapping[str, V_T]):
         new.update(other)
         return new
 
-    def __ior__(self, other) -> "CaseInsensitiveDict[V_T]":
+    def __ior__(self, other) -> CaseInsensitiveDict[V_T]:
         if not isinstance(other, Mapping):
             return NotImplemented
 
         self.update(other)
         return self
 
-    def copy(self) -> "CaseInsensitiveDict[V_T]":
+    def copy(self) -> CaseInsensitiveDict[V_T]:
         return CaseInsensitiveDict(self)
 
     def __repr__(self) -> str:
         return f"CaseInsensitiveDict({repr(dict(self.items()))})"
+
+
+class RequestHandler(ABC):
+    @abstractmethod
+    def __call__(
+        self, conn_info: ConnectionInfo, request: HTTPRequest
+    ) -> HTTPResponse: ...
+
+
+HeaderContainer = CaseInsensitiveDict[str]

@@ -1,6 +1,4 @@
-from .structures import CaseInsensitiveDict
-
-HeaderContainer = CaseInsensitiveDict[str]
+from .types import HeaderContainer
 
 NO_CACHE_HEADERS = HeaderContainer({
     "Cache-Control": "no-cache",

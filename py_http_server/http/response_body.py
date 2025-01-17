@@ -1,7 +1,7 @@
 from pathlib import Path
 from abc import ABC, abstractmethod
 from io import IOBase
-from ..common.constants import HeaderContainer
+from ..common import HeaderContainer
 from ..networking.connection_socket import ConnectionSocket
 
 

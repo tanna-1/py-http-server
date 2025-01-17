@@ -1,5 +1,5 @@
 from ..networking.connection_socket import ConnectionSocket
-from ..common.constants import STATUS_CODES, HeaderContainer
+from ..common import STATUS_CODES, HeaderContainer
 from .response_body import ResponseBody
 from typing import Any, Optional
 import json

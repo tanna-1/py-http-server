@@ -1,4 +1,3 @@
-from ..http.response_body import EmptyBody
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..common import RequestHandlerABC, HeaderContainer, RequestHandler, to_http_date
@@ -10,19 +9,9 @@ class DefaultMiddleware(RequestHandlerABC):
         self.next = next
 
     def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
-        # Convert HEAD requests to GET
-        original_method = request.method
-        if original_method == "HEAD":
-            request.method = "GET"
-
         resp = self.next(conn_info, request)
         resp.headers = HeaderContainer({
             "Server": "Tan's HTTP Server",
             "Date": to_http_date(datetime.now(timezone.utc))
         }) | resp.headers
-
-        # Omit the body if it was a HEAD request
-        if original_method == "HEAD":
-            resp.body = EmptyBody()
-
         return resp

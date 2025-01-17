@@ -31,7 +31,7 @@ from py_http_server.middlewares import (
     CompressMiddleware,
     RewriteRedirectsMiddleware,
 )
-from py_http_server.routers import ProxyRouter
+from py_http_server.routers import ReverseProxyRouter
 from py_http_server.networking import TCPAddress
 from py_http_server import app_main
 
@@ -39,7 +39,7 @@ app_main(
     handler_chain=DefaultMiddleware(
         CompressMiddleware(
             RewriteRedirectsMiddleware(
-                ProxyRouter("http://localhost:8080", add_forwarded_headers=False),
+                ReverseProxyRouter("http://localhost:8080", set_proxy_headers=False),
                 {"localhost:8080": "localhost"},
             )
         )
@@ -89,5 +89,5 @@ app_main(
 3. **FileRouter**  
    Serves static files from a specified directory. Supports `ETag`, `Last-Modified` headers, and generated directory index pages.
 
-4. **ProxyRouter**  
+4. **ReverseProxyRouter**  
    Proxies requests to another server. Supports `X-Forwarded-{For, Host, Proto}` and `Forwarded` headers and can preserve `Host` header.

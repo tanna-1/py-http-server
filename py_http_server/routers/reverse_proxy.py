@@ -11,7 +11,7 @@ from urllib3 import PoolManager, BaseHTTPResponse
 from urllib3.exceptions import HTTPError
 
 
-class ProxyRouter(RequestHandlerABC):
+class ReverseProxyRouter(RequestHandlerABC):
     def __init__(
         self,
         proxy_host: str,
@@ -20,7 +20,7 @@ class ProxyRouter(RequestHandlerABC):
         preserve_host: bool = False,
         decode_content: bool = False,
     ):
-        """Inits ProxyRouter.
+        """Inits ReverseProxyRouter.
 
         Args:
         proxy_host -- The base URL of the target server to proxy requests to.

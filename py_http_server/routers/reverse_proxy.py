@@ -1,4 +1,4 @@
-from ..common import HeaderContainer, RequestHandlerABC
+from ..common import HeaderContainer, RequestHandlerABC, NO_CACHE_HEADERS
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory
@@ -36,7 +36,7 @@ class ReverseProxyRouter(RequestHandlerABC):
         self.__decode_content = decode_content
 
         self.__pool = PoolManager()
-        self.http = HTTPResponseFactory()
+        self.http = HTTPResponseFactory(NO_CACHE_HEADERS)
 
         self.__chain = _ProxyPostprocessMiddleware(
             _ProxyPreprocessMiddleware(

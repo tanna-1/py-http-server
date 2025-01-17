@@ -56,11 +56,8 @@ class ConnectionThread(threading.Thread):
                 # Close the connection if necessary
                 if conn_policy == "close":
                     break
-        except GracefulDisconnectException:
-            # Graceful disconnection is not an error
-            pass
-        except ConnectionResetError:
-            # Ungraceful disconnection is also not an error
+        except (GracefulDisconnectException, ConnectionResetError, ConnectionAbortedError):
+            # Disconnection is not an error
             pass
         except Exception as exc:
             # Suppress error messages on dispose() call

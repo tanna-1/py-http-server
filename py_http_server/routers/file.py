@@ -1,7 +1,17 @@
 from ..networking import ConnectionInfo
 from ..http.request import HTTPRequest
 from ..http.response import HTTPResponse, HTTPResponseFactory, ResponseBody
-from ..common import RequestHandlerABC, HeaderContainer, NO_CACHE_HEADERS, file_etag, from_http_date, to_http_date
+from ..middlewares._internal.file import (
+    _HEADToGETMiddleware,
+    _PreconditionEvalMiddleware,
+)
+from ..common import (
+    RequestHandlerABC,
+    HeaderContainer,
+    NO_CACHE_HEADERS,
+    file_etag,
+    to_http_date,
+)
 from .. import log
 from pathlib import Path
 from datetime import datetime, timezone
@@ -45,6 +55,12 @@ class FileRouter(RequestHandlerABC):
         self.__enable_last_modified = enable_last_modified
         self.__disable_symlinks = disable_symlinks
 
+        self.__chain = _PreconditionEvalMiddleware(
+            _HEADToGETMiddleware(
+                lambda conn_info, request: self.__actual_call(conn_info, request)
+            )
+        )
+
     def __is_path_allowed(self, path: Path):
         resolved_path = path.resolve()
         if self.__disable_symlinks:
@@ -67,7 +83,7 @@ class FileRouter(RequestHandlerABC):
         value = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
         return value.replace(microsecond=0)
 
-    def __serve_file(self, request: HTTPRequest, path: Path):
+    def __serve_file(self, path: Path):
         """RFC9110: The server generating a 304 response MUST generate
         any of the following header fields that would have been sent
         in a 200 (OK) response to the same request:
@@ -78,30 +94,15 @@ class FileRouter(RequestHandlerABC):
 
         headers = HeaderContainer()
         if self.__enable_etag:
-            etag = headers["ETag"] = file_etag(path)
-
-            # Return 304 if ETag matches
-            if etag == request.headers.get("If-None-Match", None):
-                return self.http.status(304, headers)
+            headers["ETag"] = file_etag(path)
 
         if self.__enable_last_modified:
-            last_modified = self.__get_last_modified(path)
-            headers["Last-Modified"] = to_http_date(last_modified)
-
-            """RFC9110: A recipient MUST ignore If-Modified-Since
-               if the request contains an If-None-Match header field"""
-            if (
-                "If-Modified-Since" in request.headers
-                and not "If-None-Match" in request.headers
-            ):
-                if_modified_since = from_http_date(request.headers["If-Modified-Since"])
-                if if_modified_since and if_modified_since >= last_modified:
-                    return self.http.status(304, headers)
+            headers["Last-Modified"] = to_http_date(self.__get_last_modified(path))
 
         headers["Content-Type"] = self.__get_content_type(path)
         return HTTPResponse(200, headers, ResponseBody.from_file(path))
 
-    def __serve_folder(self, conn_info: ConnectionInfo, path: Path):
+    def __serve_index(self, conn_info: ConnectionInfo, path: Path):
         # Turns any path into an absolute web path (relative to document root)
         make_link = lambda p: urllib.parse.quote(
             "/" + p.relative_to(self.__document_root).as_posix()
@@ -160,6 +161,9 @@ class FileRouter(RequestHandlerABC):
         )
 
     def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
+        return self.__chain(conn_info, request)
+
+    def __actual_call(self, conn_info: ConnectionInfo, request: HTTPRequest):
         if request.method != "GET":
             # Method not allowed
             return self.http.status(405)
@@ -175,14 +179,14 @@ class FileRouter(RequestHandlerABC):
 
         try:
             if path.is_file():
-                return self.__serve_file(request, path)
+                return self.__serve_file(path)
             elif path.is_dir():
                 index_html = path.joinpath("index.html")
                 if index_html.is_file():
-                    return self.__serve_file(request, index_html)
+                    return self.__serve_file(index_html)
                 elif self.__generate_index:
                     # Generate index if allowe and there is no index.html
-                    return self.__serve_folder(conn_info, path)
+                    return self.__serve_index(conn_info, path)
         except Exception as exc:
             LOG.exception("Error while accesing path", exc_info=exc)
             return self.http.status(500)

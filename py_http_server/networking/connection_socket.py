@@ -14,7 +14,7 @@ elif _PLATFORM.startswith("Linux"):
 # Windows doesn't have an equivalent
 
 
-class GracefulDisconnectException(Exception):
+class GracefulDisconnectException(ConnectionError):
     pass
 
 

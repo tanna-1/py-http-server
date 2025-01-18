@@ -104,3 +104,34 @@ class BytesBody(ResponseBody):
 class EmptyBody(ResponseBody):
     def send_to(self, conn: ConnectionSocket):
         pass
+
+
+# To be used for CONNECT responses, clears headers
+class CONNECTTunnelBody(ResponseBody):
+    def __init__(self, remote: ConnectionSocket, stream_chunk_size: int = 1048576):
+        self.__remote = remote
+        self.__stream_chunk_size = stream_chunk_size
+
+    def process_headers(self, headers: HeaderContainer) -> HeaderContainer:
+        # CONNECT responses have no headers
+        return HeaderContainer()
+
+    def send_to(self, conn: ConnectionSocket):
+        with conn.nonblocking(), self.__remote.nonblocking():
+            while True:
+                try:
+                    readables = ConnectionSocket.wait_any_readable(
+                        {conn, self.__remote}
+                    )
+
+                    if conn in readables:
+                        self.__remote.send(conn.recv(self.__stream_chunk_size))
+
+                    if self.__remote in readables:
+                        conn.send(self.__remote.recv(self.__stream_chunk_size))
+                except BlockingIOError:
+                    # This shouldn't happen
+                    pass
+                except ConnectionError:
+                    break
+        self.__remote.close()

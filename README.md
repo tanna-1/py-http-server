@@ -24,7 +24,7 @@ app_main(
 )
 ```
 
-### Transparent reverse proxy
+### Reverse proxy
 ```python
 from py_http_server.middlewares import (
     DefaultMiddleware,
@@ -39,11 +39,27 @@ app_main(
     handler_chain=DefaultMiddleware(
         CompressMiddleware(
             RewriteRedirectsMiddleware(
+                # "set_proxy_headers=False" makes the proxy transparent
                 ReverseProxyRouter("http://localhost:8080", set_proxy_headers=False),
                 {"localhost:8080": "localhost"},
             )
         )
     ),
+    http_listeners=[
+        TCPAddress("127.0.0.1", 80),
+        TCPAddress("::1", 80),
+    ],
+)
+```
+
+### Forward proxy
+```python
+from py_http_server.routers import ForwardProxyRouter
+from py_http_server.networking import TCPAddress
+from py_http_server import app_main
+
+app_main(
+    handler_chain=ForwardProxyRouter(),
     http_listeners=[
         TCPAddress("127.0.0.1", 80),
         TCPAddress("::1", 80),
@@ -74,9 +90,9 @@ app_main(
    Rewrites the Location, Content-Location and URI headers using the provided alias map.
 
 ### Routers
+
 > [!NOTE]
 > `CodeRouter` is a base class and cannot be used on its own.
-
 1. **CodeRouter**  
    Auto-discovers route handlers using a `@route(path)` decorator for mapping paths to handler functions. Calls `default_route` for any non-handled route.
 
@@ -90,4 +106,9 @@ app_main(
    Serves static files from a specified directory. Supports `ETag`, `Last-Modified` headers, and generated directory index pages.
 
 4. **ReverseProxyRouter**  
-   Proxies requests to another server. Supports `X-Forwarded-{For, Host, Proto}` and `Forwarded` headers and can preserve `Host` header.
+   Proxies requests to the specified host. Supports `X-Forwarded-{For, Host, Proto}` and `Forwarded` headers and can preserve `Host` header.
+
+> [!NOTE]
+> `ForwardProxyRouter` allows any destination host by default. Specify the `allowed_hosts` parameter to change this behavior.
+5. **ForwardProxyRouter**  
+   Proxies requests to any host. Supports `CONNECT` and HTTP proxying and can be used as HTTP or HTTPS proxy server.

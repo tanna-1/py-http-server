@@ -42,7 +42,7 @@ class HTTPResponse:
 
     def send_to(self, conn: ConnectionSocket, http_version: str):
         if self.body:
-            self.__headers |= self.body.headers
+            self.__headers = self.body.process_headers(self.__headers)
         else:
             self.__headers["Content-Length"] = "0"
 

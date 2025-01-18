@@ -12,9 +12,8 @@ class ResponseBody(ABC):
     def __len__(self) -> int:
         return 0
 
-    @property
-    def headers(self) -> HeaderContainer:
-        return HeaderContainer()
+    def process_headers(self, headers: HeaderContainer) -> HeaderContainer:
+        return headers
 
     @abstractmethod
     def send_to(self, conn: ConnectionSocket) -> None: ...
@@ -40,9 +39,8 @@ class StreamingBody(ResponseBody):
         self.__stream = stream
         self.__stream_chunk_size = stream_chunk_size
 
-    @property
-    def headers(self) -> HeaderContainer:
-        return HeaderContainer({"Transfer-Encoding": "chunked"})
+    def process_headers(self, headers: HeaderContainer) -> HeaderContainer:
+        return headers | {"Transfer-Encoding": "chunked"}
 
     def __get_chunk_size(self, val: bytes) -> bytes:
         return hex(len(val))[2:].upper().encode() + b"\r\n"
@@ -72,9 +70,8 @@ class FileBody(ResponseBody):
     def file_path(self) -> Path:
         return self.__file_path
 
-    @property
-    def headers(self) -> HeaderContainer:
-        return HeaderContainer({"Content-Length": str(len(self))})
+    def process_headers(self, headers: HeaderContainer) -> HeaderContainer:
+        return headers | {"Content-Length": str(len(self))}
 
     def send_to(self, conn: ConnectionSocket):
         with self.__file_path.open("rb") as f:
@@ -96,15 +93,14 @@ class BytesBody(ResponseBody):
     def content(self, value: bytes):
         self.__content = value
 
-    @property
-    def headers(self) -> HeaderContainer:
-        return HeaderContainer({"Content-Length": str(len(self))})
+    def process_headers(self, headers: HeaderContainer) -> HeaderContainer:
+        return headers | {"Content-Length": str(len(self))}
 
     def send_to(self, conn: ConnectionSocket):
         conn.send(self.content)
 
 
-# EmptyBody has no Content-Length header, to be used for HEAD responses
+# To be used for HEAD responses, does not set Content-Length
 class EmptyBody(ResponseBody):
     def send_to(self, conn: ConnectionSocket):
         pass

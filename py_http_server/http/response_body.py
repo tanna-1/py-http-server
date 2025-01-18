@@ -9,12 +9,12 @@ class ResponseBody(ABC):
     def __bool__(self) -> bool:
         return True
 
-    @abstractmethod
-    def __len__(self) -> int: ...
+    def __len__(self) -> int:
+        return 0
 
     @property
-    @abstractmethod
-    def headers(self) -> HeaderContainer: ...
+    def headers(self) -> HeaderContainer:
+        return HeaderContainer()
 
     @abstractmethod
     def send_to(self, conn: ConnectionSocket) -> None: ...
@@ -37,19 +37,8 @@ class StreamingBody(ResponseBody):
     TRAILER = b"\r\n"
 
     def __init__(self, stream: IOBase, stream_chunk_size: int = 1048576):
-        self.stream = stream
+        self.__stream = stream
         self.__stream_chunk_size = stream_chunk_size
-
-    def __len__(self):
-        return 0
-
-    @property
-    def stream(self) -> IOBase:
-        return self.__stream
-
-    @stream.setter
-    def stream(self, value: IOBase):
-        self.__stream = value
 
     @property
     def headers(self) -> HeaderContainer:
@@ -67,12 +56,14 @@ class StreamingBody(ResponseBody):
             if not chunk:
                 break
             conn.send(self.__make_chunk(chunk))
+        self.__stream.close()
         conn.send(self.LAST_CHUNK + self.TRAILER)
 
 
 class FileBody(ResponseBody):
     def __init__(self, file_path: Path):
-        self.file_path = file_path
+        self.__file_path = file_path
+        self.__len = file_path.stat().st_size
 
     def __len__(self):
         return self.__len
@@ -80,11 +71,6 @@ class FileBody(ResponseBody):
     @property
     def file_path(self) -> Path:
         return self.__file_path
-
-    @file_path.setter
-    def file_path(self, value: Path):
-        self.__file_path = value
-        self.__len = value.stat().st_size
 
     @property
     def headers(self) -> HeaderContainer:
@@ -120,12 +106,5 @@ class BytesBody(ResponseBody):
 
 # EmptyBody has no Content-Length header, to be used for HEAD responses
 class EmptyBody(ResponseBody):
-    def __len__(self):
-        return 0
-
-    @property
-    def headers(self) -> HeaderContainer:
-        return HeaderContainer()
-
     def send_to(self, conn: ConnectionSocket):
         pass

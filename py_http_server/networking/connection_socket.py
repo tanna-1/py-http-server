@@ -1,3 +1,4 @@
+import select
 import socket
 import ssl
 from platform import platform
@@ -16,6 +17,18 @@ elif _PLATFORM.startswith("Linux"):
 
 class GracefulDisconnectException(ConnectionError):
     pass
+
+
+class _NonblockingContext:
+    def __init__(self, sock: socket.socket):
+        self.__sock = sock
+
+    def __enter__(self):
+        self.__prev_blocking = self.__sock.getblocking()
+        self.__sock.setblocking(False)
+
+    def __exit__(self, *args):
+        self.__sock.setblocking(self.__prev_blocking)
 
 
 class ConnectionSocket:
@@ -65,6 +78,9 @@ class ConnectionSocket:
             self.__remote_address = TCPAddress(addr[0], addr[1])
         return self.__remote_address
 
+    def nonblocking(self):
+        return _NonblockingContext(self.__socket)
+
     def recv(self, bufsize: int, flags: int = 0) -> bytes:
         ret = self.__socket.recv(bufsize, flags)
         if len(ret) == 0:
@@ -94,3 +110,14 @@ class ConnectionSocket:
         except:
             pass
         self.__socket.close()
+
+    @classmethod
+    def wait_any_readable(
+        cls, sockets: set["ConnectionSocket"], timeout: float | None = None
+    ) -> set["ConnectionSocket"]:
+        """
+        Wait for any of the given sockets to be readable.
+        Returns a set of sockets that are readable.
+        """
+        rlist, _, _ = select.select([x.__socket for x in sockets], [], [], timeout)
+        return {x for x in sockets if x.__socket in rlist}

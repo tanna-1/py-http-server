@@ -1,20 +1,33 @@
-from ...common import RequestHandlerABC, RequestHandler
+from ...http.response import HTTPResponseFactory
+from ...common import RequestHandlerABC, RequestHandler, NO_CACHE_HEADERS
 from ...networking import ConnectionInfo
 from ...http.request import HTTPRequest
 
-IGNORED_REQUEST_HEADERS = {"Connection", "TE"}
+# Connection and Tranfer-Encoding headers are set by our server
 IGNORED_RESPONSE_HEADERS = {"Connection", "Transfer-Encoding"}
+
+# ReverseProxyRouter will control upstream Connection lifetime
+# TE is disallowed because urllib3 does not support it
+IGNORED_REQUEST_HEADERS = {"Connection", "TE"}
+
+# CONNECT is disallowed because urllib3 does not support it
+DISALLOWED_METHODS = {"CONNECT"}
 
 
 class _ProxyPreprocessMiddleware(RequestHandlerABC):
     def __init__(
         self, next: RequestHandler, set_proxy_headers: bool, preserve_host: bool
     ):
+        self.http = HTTPResponseFactory(NO_CACHE_HEADERS)
         self.next = next
         self.__set_proxy_headers = set_proxy_headers
         self.__preserve_host = preserve_host
 
     def __call__(self, conn_info: ConnectionInfo, request: HTTPRequest):
+        if request.method in DISALLOWED_METHODS:
+            # 405 Method Not Allowed
+            return self.http.status(405)
+
         # Drop ignored headers
         for header in IGNORED_REQUEST_HEADERS:
             request.headers.pop(header, None)
